@@ -1,6 +1,8 @@
+#nullable enable
 using RotinikApi.DTOs.Requests;
 using RotinikApi.DTOs.Requests.Auth;
 using RotinikApi.DTOs.Responses;
+using RotinikApi.DTOs.Responses.Auth;
 
 namespace RotinikApi.Services
 {
@@ -10,5 +12,6 @@ namespace RotinikApi.Services
         Task<UsuarioResponse> CriarAsync(UsuarioCriarRequest dto);
         Task RemoverAsync(int id);
         Task<UsuarioResponse> LoginAsync(AuthRequest dto);
+        Task<AuthResponse?> AutenticarAsync(AuthRequest dto);
     }
 }

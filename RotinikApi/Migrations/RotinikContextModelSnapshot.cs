@@ -34,19 +34,15 @@ namespace RotinikApi.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Nome")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Senha")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Telefone")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");

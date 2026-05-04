@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using RotinikApi.DTOs.Requests;
+using RotinikApi.DTOs.Requests.Auth;
 using RotinikApi.Services;
+using RotinikApi.DTOs.Responses.Auth;
 
 namespace RotinikApi.Controllers
 {
@@ -34,6 +36,20 @@ namespace RotinikApi.Controllers
         {
             await _service.RemoverAsync(id);
             return NoContent();
+        }
+        
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] AuthRequest dto)
+        {
+            // 1. O Controller delega a validação para o Service
+            var response = await _service.AutenticarAsync(dto);
+
+            if (response == null)
+            {
+                return Unauthorized(new { Mensagem = "E-mail ou senha inválidos." });
+            }
+
+            return Ok(response);
         }
     }
 }

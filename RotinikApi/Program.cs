@@ -5,8 +5,24 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
+
 builder.Services.AddOpenApi();
+
+// 2. ADIÇÃO: Política de CORS (Permite que o Angular acesse o C#)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("RotinikAppPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // Origem do seu Angular
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 
 // Banco de dados
 builder.Services.AddDbContext<RotinikContext>(opts =>
@@ -30,6 +46,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("RotinikAppPolicy");
 app.UseAuthorization();
 app.MapControllers();
 

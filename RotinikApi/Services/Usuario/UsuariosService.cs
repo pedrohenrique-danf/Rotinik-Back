@@ -1,3 +1,4 @@
+#nullable enable
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -5,7 +6,8 @@ using RotinikApi.Data;
 using RotinikApi.DTOs.Requests;
 using RotinikApi.DTOs.Requests.Auth;
 using RotinikApi.DTOs.Responses;
-using RotinikApi.Models;
+using RotinikApi.DTOs.Responses.Auth;
+using  RotinikApi.Models;
 
 namespace RotinikApi.Services
 {
@@ -95,6 +97,31 @@ namespace RotinikApi.Services
         {
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(senha));
             return Convert.ToHexString(bytes).ToLower();
+        }
+        
+        public async Task<AuthResponse?> AutenticarAsync(AuthRequest dto)
+        {
+            // 1. Gere o hash da senha que o usuário acabou de digitar
+            var senhaDigitadaHash = GerarHash(dto.Senha);
+
+            // 2. Agora compare HASH com HASH no banco
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Email == dto.Email && u.Senha == senhaDigitadaHash);
+
+            if (usuario == null) return null;
+
+            return new AuthResponse
+            {
+                Token = "token_temporario_rotinik", 
+                Usuario = new UsuarioResponse
+                {
+                    Id = usuario.Id,
+                    Nome = usuario.Nome,
+                    Email = usuario.Email,
+                    Telefone = usuario.Telefone,
+                    DataCadastro = usuario.DataCadastro
+                }
+            };
         }
     }
 }
