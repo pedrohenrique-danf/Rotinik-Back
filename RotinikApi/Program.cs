@@ -1,4 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using RotinikApi.Data;
 using RotinikApi.Services;
 using Scalar.AspNetCore;
@@ -13,12 +16,12 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
-// 2. ADIÇÃO: Política de CORS (Permite que o Angular acesse o C#)
+// CORS: Permite que o Angular (localhost:4200) acesse a API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("RotinikAppPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:4200") // Origem do seu Angular
+        policy.WithOrigins("http://localhost:4200")
             .AllowAnyMethod()
             .AllowAnyHeader();
     });
@@ -28,6 +31,25 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<RotinikContext>(opts =>
     opts.UseNpgsql(builder.Configuration.GetConnectionString("RotinikConnection"))
 );
+
+// JWT: Lê as configurações do appsettings
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var jwtKey = jwtSettings["Key"]!;
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = jwtSettings["Issuer"],
+            ValidAudience            = jwtSettings["Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
 
 // Serviços
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
@@ -47,6 +69,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("RotinikAppPolicy");
+app.UseAuthentication(); // <-- Deve vir ANTES de UseAuthorization
 app.UseAuthorization();
 app.MapControllers();
 
