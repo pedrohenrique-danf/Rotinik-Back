@@ -11,6 +11,9 @@ using RotinikApi.DTOs.Requests.Auth;
 using RotinikApi.DTOs.Responses;
 using RotinikApi.DTOs.Responses.Auth;
 using RotinikApi.Models;
+// Resolve ambiguity between System.Threading.Tasks.Task and RotinikApi.Services.Task namespace
+using Task = System.Threading.Tasks.Task;
+
 
 namespace RotinikApi.Services
 {

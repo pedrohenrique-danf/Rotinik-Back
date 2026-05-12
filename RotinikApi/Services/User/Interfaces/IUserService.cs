@@ -8,11 +8,11 @@ namespace RotinikApi.Services
 {
     public interface IUserService
     {
-        Task<IEnumerable<UserResponse>> GetAllAsync();
-        Task<UserResponse> CreateAsync(UserCreateRequest dto);
-        Task DeleteAsync(int id);
-        Task<UserResponse> LoginAsync(AuthRequest dto);
-        Task<AuthResponse?> AuthenticateAsync(AuthRequest dto);
-        Task<UserResponse?> GetMeAsync(int userId);
+        System.Threading.Tasks.Task<IEnumerable<UserResponse>> GetAllAsync();
+        System.Threading.Tasks.Task<UserResponse> CreateAsync(UserCreateRequest dto);
+        System.Threading.Tasks.Task DeleteAsync(int id);
+        System.Threading.Tasks.Task<UserResponse> LoginAsync(AuthRequest dto);
+        System.Threading.Tasks.Task<AuthResponse?> AuthenticateAsync(AuthRequest dto);
+        System.Threading.Tasks.Task<UserResponse?> GetMeAsync(int userId);
     }
 }

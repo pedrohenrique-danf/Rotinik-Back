@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RotinikApi.Data;
 using RotinikApi.Services;
+using RotinikApi.Services.Routines;
+using RotinikApi.Services.Tasks;
+using RotinikApi.Services.RoutineTasks;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +19,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
-// CORS: Permite que o Angular (localhost:4200) acesse a API
+// CORS: Allow the frontend (localhost:4200) to access the API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("RotinikAppPolicy", policy =>
@@ -27,12 +30,12 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Banco de dados
+// Database
 builder.Services.AddDbContext<RotinikContext>(opts =>
     opts.UseNpgsql(builder.Configuration.GetConnectionString("RotinikConnection"))
 );
 
-// JWT: Lê as configurações do appsettings
+// JWT: Read settings from appsettings
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var jwtKey = jwtSettings["Key"]!;
 
@@ -51,8 +54,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Serviços
+// Services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoutineService, RoutineService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IRoutineTaskService, RoutineTaskService>();
 
 var app = builder.Build();
 
@@ -69,7 +75,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("RotinikAppPolicy");
-app.UseAuthentication(); // <-- Deve vir ANTES de UseAuthorization
+app.UseAuthentication(); // <-- Must come BEFORE UseAuthorization
 app.UseAuthorization();
 app.MapControllers();
 
