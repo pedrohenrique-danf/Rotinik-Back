@@ -8,6 +8,6 @@ namespace RotinikApi.Data
         
         public RotinikContext(DbContextOptions<RotinikContext> opts) : base(opts) { }
 
-        public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }
