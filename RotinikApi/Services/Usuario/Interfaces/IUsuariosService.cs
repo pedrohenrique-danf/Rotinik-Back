@@ -13,5 +13,6 @@ namespace RotinikApi.Services
         Task RemoverAsync(int id);
         Task<UsuarioResponse> LoginAsync(AuthRequest dto);
         Task<AuthResponse?> AutenticarAsync(AuthRequest dto);
+        Task<UsuarioResponse?> MeAsync(int usuarioId);
     }
 }
