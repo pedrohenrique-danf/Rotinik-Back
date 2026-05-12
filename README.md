@@ -1,116 +1,90 @@
-# Rotinik Backend
+# Rotinik Backend API
 
-![Angular](https://img.shields.io/badge/Angular-18-DD0031?logo=angular&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)
-![Backend Target](https://img.shields.io/badge/API-ASP.NET%20Core-512BD4?logo=dotnet&logoColor=white)
+![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-239120?logo=c-sharp&logoColor=white)
 
-Rotinik transforma rotina em progresso visivel. O produto usa gamificacao para combater a procrastinacao com loops claros de recompensa: tarefas geram XP, moedas, streaks, historico e motivacao para manter consistencia no dia a dia.
+## Prerequisites
 
-Hoje o repositorio representa o frontend em Angular da plataforma. A base foi iniciada como prototipo academico, mas esta sendo evoluida para uma arquitetura real de integracao com backend em C#.
+Before running the project locally, ensure you have the following installed:
 
-## Proposta de Valor
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [PostgreSQL](https://www.postgresql.org/download/)
+- [DBeaver](https://dbeaver.io/) or any other database client (optional, for visualizing data)
 
-- Quebra objetivos grandes em tarefas pequenas e acompanhaveis
-- Recompensa execucao com XP, moedas e progresso de nivel
-- Usa rotina, loja, perfil e elementos sociais para reforcar consistencia
-- Converte um problema subjetivo, procrastinacao, em feedback visual e mensuravel
+## Local Setup Tutorial (From Zero to Testing)
 
-## Visao de Arquitetura
+Follow these steps to get the server running on your local machine:
 
-### Frontend
+### 1. Database Configuration
 
-- Angular 18 com Standalone Components
-- Signals e computed para estado de leitura e derivacoes de UI
-- HttpClient para integracao com API REST
-- SCSS com design system dark gamificado e fonte Montserrat
+The application requires a PostgreSQL database to store users, routines, and tasks. You need to configure the connection string.
 
-### Backend Alvo
+1. Navigate to the `RotinikApi` directory:
+   ```bash
+   cd RotinikApi
+   ```
+2. Create a file named `appsettings.Development.json` (if it doesn't exist) and add your PostgreSQL credentials and JWT secret key:
 
-- ASP.NET Core Web API
-- DTOs versionados por recurso
-- JWT para autenticacao
-- Regras oficiais de XP, moedas, streaks e progresso executadas no servidor
+   ```json
+   {
+       "Logging": {
+           "LogLevel": {
+               "Default": "Information",
+               "Microsoft.AspNetCore": "Warning"
+           }
+       },
+       "ConnectionStrings": {
+           "RotinikConnection": "Host=localhost;Port=5432;Database=rotinik_db;Username=postgres;Password=YOUR_POSTGRES_PASSWORD"
+       },
+       "JwtSettings": {
+           "Key": "RotinikSuperSecretKeyThatNeedsToBeAtLeast32CharactersLong!",
+           "Issuer": "RotinikApi",
+           "Audience": "RotinikApp",
+           "ExpiresInHours": 8
+       }
+   }
+   ```
+   *(Make sure your local PostgreSQL service is running and replace `YOUR_POSTGRES_PASSWORD` with your actual password).*
 
-### Contrato Arquitetural
+### 2. Install Entity Framework Core CLI
 
-O frontend deixa de ser a fonte de verdade do dominio e passa a atuar em quatro camadas:
-
-1. `ApiServices`: clientes HTTP puros
-2. `Stores/Facades`: carregamento, cache local, loading/error e exposicao para a UI
-3. `Mappers`: conversao entre DTOs, view models e modelos de dominio leves
-4. `Shared/UI`: componentes de apresentacao reutilizaveis
-
-## O que o Projeto Demonstra
-
-- Organizacao por `core`, `features` e `shared`
-- Modelagem orientada a objetos no frontend para explorar regras de dominio
-- Uso de Signals para compor dashboards e estados derivados
-- Preparacao para migrar de mock local para integracao real com API C#
-
-## Features Atuais
-
-- Autenticacao com telas de login e cadastro
-- Dashboard inicial com progresso do usuario
-- CRUD local de rotinas e tarefas
-- Sistema gamificado de XP, niveis e moedas
-- Loja, inventario e historico
-- Perfil com estatisticas, heatmap, achievements e historico
-- Modulos sociais com amigos, feed e leaderboard
-
-## Roadmap de Evolucao
-
-- Reposicionar a documentacao para avaliadores tecnicos e recrutadores
-- Isolar mocks do codigo de producao
-- Refatorar services para `HttpClient + facade/store`
-- Componentizar blocos repetidos de Home, Routines e Profile
-- Padronizar acessibilidade, estados assinc e design system
-
-## Estrutura Principal
-
-```text
-src/
-|-- app/
-|   |-- core/
-|   |   |-- models/             # DTOs e modelos de dominio
-|   |   |-- services/           # API clients, facades e stores
-|   |   `-- mocks/              # Dados temporarios enquanto a API nao assume a fonte oficial
-|   |-- features/               # Views e fluxos por dominio
-|   `-- shared/                 # Componentes UI e feature components reutilizaveis
-|-- environments/
-|-- main.ts
-`-- styles.scss
-```
-
-## Como Rodar
-
+If you haven't installed the `dotnet-ef` global tool, install it by running:
 ```bash
-npm install
-npm start
+dotnet tool install --global dotnet-ef
 ```
 
-App local:
+### 3. Apply Database Migrations
 
-```text
-http://localhost:4200
-```
-
-## Scripts
-
+Apply the existing migrations to create the database schema automatically:
 ```bash
-npm start
-npm run build
-npm run build:prod
-npm test
-npm run format
-npm run format:check
+dotnet ef database update
 ```
+*Note: This command will create the `rotinik_db` database and all necessary tables.*
 
-## Documentacao Complementar
+### 4. Run the Server
 
-- [Visao de Produto](./docs/PRODUCT_OVERVIEW.md)
-- [Arquitetura](./docs/ARCHITECTURE.md)
-- [Plano de Integracao com API](./docs/API_INTEGRATION_PLAN.md)
+Start the application:
+```bash
+dotnet run
+```
+The API will be available at `http://localhost:5025`.
 
-## Status Atual
+### 5. API Documentation (Scalar)
 
-O frontend esta em transicao de prototipo para arquitetura integrada com backend real. O foco atual da refatoracao e remover mocks embutidos dos services, consolidar componentes compartilhados e formalizar o contrato Angular + C#.
+You can explore and test the API endpoints interactively using Scalar, which is built-in.
+While the server is running, open your browser and navigate to:
+👉 `http://localhost:5025/scalar/v1`
+
+## Running Automated Tests
+
+We have provided a bash script to test the main User/Auth endpoints automatically (including JWT authentication).
+
+1. Ensure the API is running in one terminal window (`dotnet run`).
+2. Open a new terminal window in the `RotinikApi` folder.
+3. Make the script executable and run it:
+   ```bash
+   chmod +x scripts/test_api.sh
+   bash scripts/test_api.sh
+   ```
+This script will sequentially test creating a user, blocking unauthorized access, logging in, retrieving authenticated user data (`/me`), and finally deleting the test user.
