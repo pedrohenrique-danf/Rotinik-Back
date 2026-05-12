@@ -84,7 +84,7 @@ We have provided a bash script to test the main User/Auth endpoints automaticall
 2. Open a new terminal window in the `RotinikApi` folder.
 3. Make the script executable and run it:
    ```bash
-   chmod +x scripts/test_api.sh
-   bash scripts/test_api.sh
+   chmod +x scripts/run_tests.sh
+   bash scripts/run_tests.sh
    ```
 This script will sequentially test creating a user, blocking unauthorized access, logging in, retrieving authenticated user data (`/me`), and finally deleting the test user.

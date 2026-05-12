@@ -24,32 +24,43 @@ command -v jq &>/dev/null && JQ_CMD="jq ."
 # ── Pass/fail counters (accumulated per script) ───────────────────────────────
 PASS=0
 FAIL=0
+FILE_PASS=0
+FILE_FAIL=0
+COMMON_SOURCED=1
 
 # ── Printing helpers ──────────────────────────────────────────────────────────
-ok()      { echo -e "${GREEN}  ✓ $1${NC}";      PASS=$((PASS + 1)); }
-fail()    { echo -e "${RED}  ✗ $1${NC}";        FAIL=$((FAIL + 1)); }
-info()    { echo -e "\n${CYAN}▶ $1${NC}"; }
-section() { echo -e "\n${YELLOW}${BOLD}── $1 ──${NC}${DIM}"; }
+ok()      { echo -e "${GREEN}  ✓ $1${NC}";      PASS=$((PASS + 1)); FILE_PASS=$((FILE_PASS + 1)); }
+fail()    { echo -e "${RED}  ✗ $1${NC}";        FAIL=$((FAIL + 1)); FILE_FAIL=$((FILE_FAIL + 1)); }
+info()    { [[ "${QUIET:-0}" != "1" ]] && echo -e "\n${CYAN}▶ $1${NC}"; }
+section() { [[ "${QUIET:-0}" != "1" ]] && echo -e "\n${YELLOW}${BOLD}── $1 ──${NC}${DIM}"; }
 header()  {
+  [[ "${QUIET:-0}" = "1" ]] && return
   local title="$1"
   echo ""
   echo -e "${YELLOW}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-  printf "${YELLOW}${BOLD}║  %-56s  ║${NC}\n" "$title"
+  printf "${YELLOW}${BOLD}║  %-54s  ║${NC}\n" "$title"
   echo -e "${YELLOW}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
   echo ""
 }
+
 footer()  {
+  [[ "${QUIET:-0}" = "1" ]] && return
+  local visible_text="Results: $PASS passed  $FAIL failed"
+  local pad_len=$(( 54 - ${#visible_text} ))
+  local padding=""
+  [ $pad_len -gt 0 ] && padding=$(printf '%*s' "$pad_len" "")
   echo ""
   echo -e "${YELLOW}${BOLD}╔══════════════════════════════════════════════════════════╗${NC}"
-  printf "${YELLOW}${BOLD}║  Results: ${GREEN}%d passed${YELLOW}  ${RED}%d failed${NC}${YELLOW}${BOLD}%-36s║${NC}\n" "$PASS" "$FAIL" ""
+  echo -e "${YELLOW}${BOLD}║  Results: ${GREEN}${PASS} passed${YELLOW}  ${RED}${FAIL} failed${NC}${YELLOW}${BOLD}${padding}  ║${NC}"
   echo -e "${YELLOW}${BOLD}╚══════════════════════════════════════════════════════════╝${NC}"
   echo ""
 }
+
 abort()   { echo -e "${RED}${BOLD}  ✗ FATAL: $1 — aborting.${NC}\n"; footer; exit 1; }
 
-# ── HTTP call: prints body + returns HTTP code in HTTP_CODE ───────────────────
+# ── HTTP call: sets HTTP_CODE and BODY globals ────────────────────────────────
 #   Usage: http_call METHOD PATH [-H "..."] [-d "..."]
-#          Body is pretty-printed; HTTP_CODE is set as global.
+#   Set VERBOSE=1 to print the response body.
 http_call() {
   local method="$1"; shift
   local path="$1";   shift
@@ -60,7 +71,7 @@ http_call() {
   HTTP_CODE=$(echo "$response" | tail -1)
   BODY=$(echo "$response" | head -n -1)
 
-  echo -e "${DIM}$(echo "$BODY" | $JQ_CMD)${NC}"
+  [[ "${VERBOSE:-0}" = "1" ]] && echo -e "${DIM}$(echo "$BODY" | $JQ_CMD)${NC}"
 }
 
 # ── Extract a JSON field value (no jq required) ───────────────────────────────

@@ -7,35 +7,17 @@
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../lib/common.sh"
+if [[ -z "$COMMON_SOURCED" ]]; then
+  source "$SCRIPT_DIR/../lib/common.sh"
+fi
 
-EMAIL="rtask_$(date +%s)@rotinik.com"
-PASSWORD="Password123"
+if [[ -z "$TOKEN" || -z "$ROUTINE_ID" || -z "$USER_ID" ]]; then
+  abort "This script requires TOKEN, USER_ID, and ROUTINE_ID from previous scripts. Run run_tests.sh instead."
+fi
 
 header "ROUTINE-TASK TESTS — FMRT_7 · FMRT_8 · FMRT_9 · FMRT_12 · FMRT_14"
 
-# ── Setup: user, login, routine, task ────────────────────────────────────────
-section "Setup · Create user, login, create routine & task"
-http_call POST "/User" \
-  -d "{\"name\":\"RT Tester\",\"email\":\"$EMAIL\",\"phone\":\"+55 11 99999-9999\",\"password\":\"$PASSWORD\"}"
-[ "$HTTP_CODE" = "201" ] || abort "Signup failed (HTTP $HTTP_CODE)"
-USER_ID=$(json_field "$BODY" "id")
-ok "User created (ID: $USER_ID)"
-
-http_call POST "/User/login" \
-  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}"
-[ "$HTTP_CODE" = "200" ] || abort "Login failed (HTTP $HTTP_CODE)"
-TOKEN=$(json_field "$BODY" "token")
-[ -n "$TOKEN" ] || abort "No token"
-ok "Logged in"
-
-# Create routine
-http_call POST "/Routine" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"name":"Test Routine","description":"Used for task linkage tests"}'
-[ "$HTTP_CODE" = "201" ] || abort "Create routine failed (HTTP $HTTP_CODE)"
-ROUTINE_ID=$(json_field "$BODY" "id")
-ok "Routine created (ID: $ROUTINE_ID)"
+section "Setup · Create test tasks"
 
 # Create a short task (1 min — short enough to test time validation quickly)
 http_call POST "/Task" \

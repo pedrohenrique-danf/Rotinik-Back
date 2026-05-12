@@ -7,28 +7,15 @@
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../lib/common.sh"
+if [[ -z "$COMMON_SOURCED" ]]; then
+  source "$SCRIPT_DIR/../lib/common.sh"
+fi
 
-EMAIL="routine_$(date +%s)@rotinik.com"
-PASSWORD="Password123"
+if [[ -z "$TOKEN" ]]; then
+  abort "This script requires a TOKEN and USER_ID from 01_auth.sh. Run run_tests.sh instead."
+fi
 
 header "ROUTINE TESTS — FMRT_1 · FMRT_2 · FMRT_3 · FMRT_13"
-
-# ── Setup: create user and get token ──────────────────────────────────────────
-section "Setup · Create user & login"
-http_call POST "/User" \
-  -d "{\"name\":\"Routine Tester\",\"email\":\"$EMAIL\",\"phone\":\"+55 11 99999-9999\",\"password\":\"$PASSWORD\"}"
-[ "$HTTP_CODE" = "201" ] || abort "User signup failed (HTTP $HTTP_CODE)"
-USER_ID=$(json_field "$BODY" "id")
-ok "User created (ID: $USER_ID)"
-
-http_call POST "/User/login" \
-  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}"
-[ "$HTTP_CODE" = "200" ] || abort "Login failed (HTTP $HTTP_CODE)"
-TOKEN=$(json_field "$BODY" "token")
-[ -n "$TOKEN" ] || abort "No token in login response"
-ok "Logged in — token acquired"
-AUTH="-H \"Authorization: Bearer $TOKEN\""
 
 # ── FMRT_1 — Create routine ───────────────────────────────────────────────────
 section "FMRT_1 · POST /api/Routine — Create a routine"
@@ -129,9 +116,11 @@ else
   fail "Expected 404 but got HTTP $HTTP_CODE"
 fi
 
-# ── Cleanup ───────────────────────────────────────────────────────────────────
-section "Cleanup · DELETE /api/User/$USER_ID"
-http_call DELETE "/User/$USER_ID" -H "Authorization: Bearer $TOKEN"
-[ "$HTTP_CODE" = "204" ] && ok "Test user deleted" || fail "Cleanup failed (HTTP $HTTP_CODE)"
+# ── Setup for next scripts ───────────────────────────────────────────────────
+section "Setup · Create routine for subsequent tests"
+http_call POST "/Routine" -H "Authorization: Bearer $TOKEN" \
+  -d '{"name":"Integration Test Routine","description":"Used for task linkage tests"}'
+ROUTINE_ID=$(json_field "$BODY" "id")
+ok "Routine created (ID: $ROUTINE_ID) to be used by 04_routine_tasks.sh"
 
 footer
