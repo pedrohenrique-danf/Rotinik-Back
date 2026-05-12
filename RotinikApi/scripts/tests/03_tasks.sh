@@ -6,27 +6,15 @@
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../lib/common.sh"
+if [[ -z "$COMMON_SOURCED" ]]; then
+  source "$SCRIPT_DIR/../lib/common.sh"
+fi
 
-EMAIL="task_$(date +%s)@rotinik.com"
-PASSWORD="Password123"
+if [[ -z "$TOKEN" ]]; then
+  abort "This script requires a TOKEN from 01_auth.sh. Run run_tests.sh instead."
+fi
 
 header "TASK TESTS — FMRT_4 · FMRT_5 · FMRT_6 · FMRT_10 · FMRT_11"
-
-# ── Setup ─────────────────────────────────────────────────────────────────────
-section "Setup · Create user & login"
-http_call POST "/User" \
-  -d "{\"name\":\"Task Tester\",\"email\":\"$EMAIL\",\"phone\":\"+55 11 99999-9999\",\"password\":\"$PASSWORD\"}"
-[ "$HTTP_CODE" = "201" ] || abort "User signup failed (HTTP $HTTP_CODE)"
-USER_ID=$(json_field "$BODY" "id")
-ok "User created (ID: $USER_ID)"
-
-http_call POST "/User/login" \
-  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}"
-[ "$HTTP_CODE" = "200" ] || abort "Login failed (HTTP $HTTP_CODE)"
-TOKEN=$(json_field "$BODY" "token")
-[ -n "$TOKEN" ] || abort "No token in login response"
-ok "Logged in — token acquired"
 
 # ── FMRT_4 · FMRT_10 · FMRT_11 — Create task ────────────────────────────────
 section "FMRT_4/10/11 · POST /api/Task — Create task (Daily, Important, 30 min)"
@@ -157,15 +145,12 @@ else
 fi
 
 # ── Cleanup ───────────────────────────────────────────────────────────────────
-section "Cleanup · Delete remaining tasks and user"
+section "Cleanup · Delete remaining tasks"
 for TID in "$TASK_MONTHLY_ID" "$TASK_YEARLY_ID"; do
   if [ -n "$TID" ]; then
     http_call DELETE "/Task/$TID" -H "Authorization: Bearer $TOKEN"
     [ "$HTTP_CODE" = "204" ] && ok "Deleted task $TID" || fail "Failed to delete task $TID"
   fi
 done
-
-http_call DELETE "/User/$USER_ID" -H "Authorization: Bearer $TOKEN"
-[ "$HTTP_CODE" = "204" ] && ok "Test user deleted" || fail "Cleanup user failed (HTTP $HTTP_CODE)"
 
 footer

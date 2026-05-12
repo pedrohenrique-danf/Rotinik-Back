@@ -6,7 +6,9 @@
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../lib/common.sh"
+if [[ -z "$COMMON_SOURCED" ]]; then
+  source "$SCRIPT_DIR/../lib/common.sh"
+fi
 
 EMAIL="auth_$(date +%s)@rotinik.com"
 PASSWORD="Password123"
@@ -68,14 +70,8 @@ else
   fail "GET /me failed (HTTP $HTTP_CODE)"
 fi
 
-# ── 5. Cleanup — Delete test user ─────────────────────────────────────────────
-section "5/5 · DELETE /api/User/$USER_ID — Cleanup"
-http_call DELETE "/User/$USER_ID" -H "Authorization: Bearer $TOKEN"
-
-if [ "$HTTP_CODE" = "204" ]; then
-  ok "Test user deleted (HTTP 204)"
-else
-  fail "Cleanup failed (HTTP $HTTP_CODE)"
-fi
+# ── 5. Setup for next scripts ───────────────────────────────────────────────────
+# We keep the user alive so subsequent scripts can use the same token.
+# USER_ID and TOKEN are already available in the current shell.
 
 footer
