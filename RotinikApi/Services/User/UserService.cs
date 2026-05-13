@@ -14,7 +14,6 @@ using RotinikApi.Models;
 // Resolve ambiguity between System.Threading.Tasks.Task and RotinikApi.Services.Task namespace
 using Task = System.Threading.Tasks.Task;
 
-
 namespace RotinikApi.Services
 {
     public class UserService : IUserService
@@ -35,8 +34,9 @@ namespace RotinikApi.Services
                 {
                     Id           = u.Id,
                     Name         = u.Name,
+                    Username     = u.Username, // Mapeado
                     Email        = u.Email,
-                    Phone        = u.Phone,
+                    BirthDate    = u.BirthDate, // Corrigido erro de digitação
                     CreatedAt    = u.CreatedAt
                 })
                 .ToListAsync();
@@ -44,36 +44,34 @@ namespace RotinikApi.Services
 
         public async Task<UserResponse> CreateAsync(UserCreateRequest dto)
         {
-            var emailExists = await _context.Users
-                .AnyAsync(u => u.Email == dto.Email);
-
+            // Validação de E-mail Único
+            var emailExists = await _context.Users.AnyAsync(u => u.Email == dto.Email);
             if (emailExists)
                 throw new Exception("A user with this email is already registered.");
 
+            // Validação de Username Único (Crucial para o Rotinik)
+            var usernameExists = await _context.Users.AnyAsync(u => u.Username == dto.Username);
+            if (usernameExists)
+                throw new Exception("This username is already taken.");
+
+            // Criando a entidade com o novo construtor sincronizado com a tela
             var user = new User(
                 dto.Name,
+                dto.Username,    // Agora a Model aceita isso
+                dto.BirthDate,   // Agora a Model aceita DateTime aqui
                 dto.Email,
-                dto.Phone,
                 GenerateHash(dto.Password)
             );
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return new UserResponse
-            {
-                Id           = user.Id,
-                Name         = user.Name,
-                Email        = user.Email,
-                Phone        = user.Phone,
-                CreatedAt    = user.CreatedAt
-            };
+            return MapToResponse(user);
         }
 
         public async Task DeleteAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
-
             if (user is null)
                 throw new Exception("User not found.");
 
@@ -91,14 +89,7 @@ namespace RotinikApi.Services
             if (user is null)
                 throw new Exception("Invalid email or password.");
 
-            return new UserResponse
-            {
-                Id           = user.Id,
-                Name         = user.Name,
-                Email        = user.Email,
-                Phone        = user.Phone,
-                CreatedAt    = user.CreatedAt
-            };
+            return MapToResponse(user);
         }
 
         public async Task<AuthResponse?> AuthenticateAsync(AuthRequest dto)
@@ -115,34 +106,29 @@ namespace RotinikApi.Services
             return new AuthResponse
             {
                 Token = token,
-                User = new UserResponse
-                {
-                    Id           = user.Id,
-                    Name         = user.Name,
-                    Email        = user.Email,
-                    Phone        = user.Phone,
-                    CreatedAt    = user.CreatedAt
-                }
+                User = MapToResponse(user)
             };
         }
 
         public async Task<UserResponse?> GetMeAsync(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
-
             if (user is null) return null;
 
-            return new UserResponse
-            {
-                Id           = user.Id,
-                Name         = user.Name,
-                Email        = user.Email,
-                Phone        = user.Phone,
-                CreatedAt    = user.CreatedAt
-            };
+            return MapToResponse(user);
         }
 
         // --- Helpers ---
+
+        private static UserResponse MapToResponse(User u) => new()
+        {
+            Id        = u.Id,
+            Name      = u.Name,
+            Username  = u.Username,
+            Email     = u.Email,
+            BirthDate = u.BirthDate,
+            CreatedAt = u.CreatedAt
+        };
 
         private static string GenerateHash(string password)
         {
@@ -160,8 +146,8 @@ namespace RotinikApi.Services
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub,   user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.UniqueName, user.Username), // Adicionado Username no Token
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Name,  user.Name),
                 new Claim(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString())
             };
 

@@ -53,7 +53,7 @@ namespace RotinikApi.Services.Routines
         public async System.Threading.Tasks.Task<IEnumerable<RoutineResponse>> GetAllAsync(int userId)
         {
             return await _context.Routines
-                .Where(r => r.UserId == userId)
+              //  .Where(r => r.UserId == userId)
                 .Select(r => new RoutineResponse
                 {
                     Id          = r.Id,

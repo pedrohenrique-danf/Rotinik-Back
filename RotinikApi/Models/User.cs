@@ -7,18 +7,20 @@ namespace RotinikApi.Models
     {
         public int Id { get; protected set; }
         public string Name { get; protected set; }
+        public string Username { get; protected set; } // NOVO
+        public DateTime BirthDate { get; protected set; } // NOVO
         public string Email { get; protected set; }
-        public string Phone { get; protected set; }
         public string Password { get; protected set; }
         public DateTime CreatedAt { get; protected set; }
 
-        public User(string name, string email, string phone, string password)
+        public User(string name, string username, DateTime birthDate, string email, string password)
         {
             SetName(name);
-            SetEmail(email);
-            SetPhone(phone);
-            SetPassword(password);
-            SetCreatedAt(DateTime.UtcNow);
+            SetUsername(username);
+            BirthDate = birthDate;
+            Email = email;
+            Password = password;
+            CreatedAt = DateTime.UtcNow;
         }
 
         public void SetName(string name)
@@ -45,20 +47,34 @@ namespace RotinikApi.Models
 
             Email = email.Trim();
         }
-
-        public void SetPhone(string phone)
+        
+        public void SetUsername(string username)
         {
-            if (string.IsNullOrWhiteSpace(phone))
-                throw new Exception("Phone cannot be empty or composed of whitespace.");
-
-            if (phone.Length < 8 || phone.Length > 20)
-                throw new Exception("Phone must be between 8 and 20 characters.");
-
-            if (!Regex.IsMatch(phone.Trim(), @"^(\+55\s?)?(\(?\d{2}\)?)\s?9?\d{4}-?\d{4}$"))
-                throw new Exception("The provided phone number is invalid. Accepted formats: (11) 99999-9999, 11999999999, +55 (11) 99999-9999.");
-
-            Phone = phone.Trim();
+            if (string.IsNullOrWhiteSpace(username) || username.Length < 3)
+                throw new Exception("Username must be at least 3 characters.");
+            Username = username.Trim();
         }
+
+        public void SetBirthDate(DateTime birthDate)
+        {
+            if (birthDate > DateTime.UtcNow.AddYears(-10)) // Exemplo: mínimo 10 anos
+                throw new Exception("Invalid birth date.");
+            BirthDate = birthDate;
+        }
+
+        //public void SetPhone(string phone)
+        //{
+        //    if (string.IsNullOrWhiteSpace(phone))
+        //        throw new Exception("Phone cannot be empty or composed of whitespace.");
+
+         //   if (phone.Length < 8 || phone.Length > 20)
+         //       throw new Exception("Phone must be between 8 and 20 characters.");
+
+         //   if (!Regex.IsMatch(phone.Trim(), @"^(\+55\s?)?(\(?\d{2}\)?)\s?9?\d{4}-?\d{4}$"))
+         //       throw new Exception("The provided phone number is invalid. Accepted formats: (11) 99999-9999, 11999999999, +55 (11) 99999-9999.");
+
+         //   Phone = phone.Trim();
+        //}
 
         public void SetPassword(string password)
         {
