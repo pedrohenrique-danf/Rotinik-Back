@@ -25,8 +25,7 @@ namespace RotinikApi.Data
                 e.HasIndex(u => u.Email).IsUnique();
                 e.Property(u => u.Name).HasMaxLength(150).IsRequired();
                 e.Property(u => u.Email).HasMaxLength(150).IsRequired();
-                e.Property(u => u.Username).HasMaxLength(50).IsRequired();
-                e.Property(u => u.BirthDate).IsRequired();
+                e.Property(u => u.Phone).HasMaxLength(20).IsRequired();
                 e.Property(u => u.Password).HasMaxLength(256).IsRequired();
             });
 

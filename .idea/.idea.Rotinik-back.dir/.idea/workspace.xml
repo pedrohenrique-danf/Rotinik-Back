@@ -14,9 +14,7 @@
     <configurations />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a3e21045-2aa7-49f3-8443-a8d0d19399be" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Rotinik-back.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Rotinik-back.dir/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="a3e21045-2aa7-49f3-8443-a8d0d19399be" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -113,7 +111,7 @@
       <option name="presentableId" value="Default" />
       <updated>1777918040371</updated>
       <workItem from="1777918040375" duration="100000" />
-      <workItem from="1777918147599" duration="13682000" />
+      <workItem from="1777918147599" duration="9548000" />
     </task>
     <task id="LOCAL-00001" summary="Adicionando login">
       <option name="closed" value="true" />
@@ -131,15 +129,7 @@
       <option name="project" value="LOCAL" />
       <updated>1777928953781</updated>
     </task>
-    <task id="LOCAL-00003" summary=".">
-      <option name="closed" value="true" />
-      <created>1777929181071</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1777929181071</updated>
-    </task>
-    <option name="localTasksCounter" value="4" />
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -162,8 +152,7 @@
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="Adicionando login" />
     <MESSAGE value="login e gitignore" />
-    <MESSAGE value="." />
-    <option name="LAST_COMMIT_MESSAGE" value="." />
+    <option name="LAST_COMMIT_MESSAGE" value="login e gitignore" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -48,7 +48,7 @@ namespace RotinikApi.Controllers
         }
 
         /// <summary>Creates a new user. Public (no authentication).</summary>
-        [HttpPost("register")]
+        [HttpPost]
         public async Task<IActionResult> Create([FromBody] UserCreateRequest dto)
         {
             var user = await _service.CreateAsync(dto);
