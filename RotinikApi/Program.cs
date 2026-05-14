@@ -19,15 +19,14 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
-// CORS: Configuração robusta para permitir o tráfego do Angular (localhost:4200)
+// CORS: Allow the frontend (localhost:4200) to access the API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("RotinikAppPolicy", policy =>
     {
         policy.WithOrigins("http://localhost:4200")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials(); // Permite o envio seguro de cookies/tokens se necessário
+            .AllowAnyMethod()
+            .AllowAnyHeader();
     });
 });
 
@@ -74,16 +73,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Em ambiente de desenvolvimento local (HTTP), o Redirection às vezes causa problemas de CORS no Preflight do Angular.
-// Se estiver testando estritamente em http://localhost:5025, você pode comentar a linha abaixo.
 app.UseHttpsRedirection();
-
-// UseCors DEVE vir antes de Authentication e Authorization
 app.UseCors("RotinikAppPolicy");
-
-app.UseAuthentication(); 
+app.UseAuthentication(); // <-- Must come BEFORE UseAuthorization
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
