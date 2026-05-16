@@ -1,0 +1,6 @@
+@Rotinik_Backend_HostAddress = http://localhost:5206
+
+GET {{Rotinik_Backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
