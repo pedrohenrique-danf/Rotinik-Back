@@ -1,4 +1,3 @@
-// Arquivo: src/Services/UserService.cs
 using Microsoft.IdentityModel.Tokens;
 using Rotinik.Data;
 using Rotinik.DTOs.User;
@@ -8,7 +7,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
-using System.Text.RegularExpressions;
 
 namespace Rotinik.Services;
 

@@ -1,4 +1,3 @@
-// Arquivo: src/Validation/UserRegistrationDtoValidator.cs
 using FluentValidation;
 using Rotinik.DTOs.User;
 

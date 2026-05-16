@@ -19,12 +19,10 @@ public class GlobalExceptionMiddleware
     {
         try
         {
-            // Deixa a requisição seguir o fluxo normal
             await _next(context);
         }
         catch (Exception ex)
         {
-            // Se der erro em qualquer lugar (Controller, Service, etc), cai aqui
             _logger.LogError(ex, "An unhandled exception has occurred.");
             await HandleExceptionAsync(context, ex);
         }
@@ -34,7 +32,6 @@ public class GlobalExceptionMiddleware
     {
         context.Response.ContentType = "application/json";
 
-        // Mapeia a exceção do Core para um Status Code HTTP
         context.Response.StatusCode = exception switch
         {
             NotFoundException => (int)HttpStatusCode.NotFound,
@@ -42,7 +39,7 @@ public class GlobalExceptionMiddleware
             ForbiddenException => (int)HttpStatusCode.Forbidden,
             ValidationException => (int)HttpStatusCode.BadRequest,
             UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
-            _ => (int)HttpStatusCode.InternalServerError // Erro genérico/inesperado (500)
+            _ => (int)HttpStatusCode.InternalServerError
         };
 
         var response = new { message = exception.Message };

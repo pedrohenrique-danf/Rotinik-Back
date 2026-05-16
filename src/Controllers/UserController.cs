@@ -78,7 +78,7 @@ public class UserController : ControllerBase
     {
         var currentUserId = GetCurrentUserId();
         if (currentUserId == 0)
-            return Unauthorized(new { message = "Invalid token payload." }); // Erro de token continua no controller
+            return Unauthorized(new { message = "Invalid token payload." });
 
         var response = _userService.GetCurrentUser(currentUserId);
         return Ok(response);

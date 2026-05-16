@@ -1,6 +1,6 @@
 # Rotinik Backend API
 
-![Install .NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
+![Install .NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 ![Install PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
 ![Install Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
