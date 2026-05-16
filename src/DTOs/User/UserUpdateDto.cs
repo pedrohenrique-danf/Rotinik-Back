@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Rotinik_Backend.DTOs.User;
+namespace Rotinik.DTOs.User;
 
 public class UserUpdateDto
 {

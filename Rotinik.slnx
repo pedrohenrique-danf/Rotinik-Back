@@ -1,8 +1,8 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Rotinik-Backend.csproj" />
+    <Project Path="src/Rotinik.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Rotinik-Backend.Tests.csproj" />
+    <Project Path="tests/Rotinik.Tests.csproj" />
   </Folder>
 </Solution>

@@ -11,7 +11,7 @@ sudo systemctl start docker
 
 Rodar API:
 ```sh
-dotnet run --project src/Rotinik-Backend.csproj
+dotnet run --project src/
 ```
 
 Rodar Testes:
@@ -21,5 +21,10 @@ dotnet test
 
 Atualizar BD:
 ```sh
-dotnet ef database update --project src/Rotinik-Backend.csproj
+dotnet ef database update --project src/
+```
+
+Delete BD:
+```sh
+dotnet ef database drop --project src/ -f
 ```

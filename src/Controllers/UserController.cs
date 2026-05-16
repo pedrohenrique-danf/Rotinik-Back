@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Rotinik_Backend.Data;
-using Rotinik_Backend.DTOs.User;
-using Rotinik_Backend.Models;
+using Rotinik.Data;
+using Rotinik.DTOs.User;
+using Rotinik.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Rotinik_Backend.Controllers;
+namespace Rotinik.Controllers;
 
 [Route("api/user")] 
 [ApiController]

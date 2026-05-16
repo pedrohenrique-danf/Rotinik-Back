@@ -77,7 +77,8 @@ rm dbeaver-ce_latest_amd64.deb
 ```
 
 ```sh
-dotnet ef database update --project src/Rotinik-Backend.csproj
+# dotnet ef migrations add InitialCreate --project src/ --output-dir Data/Migrations
+dotnet ef database update --project src/Rotinik.csproj
 ```
 
 ### DBeaver

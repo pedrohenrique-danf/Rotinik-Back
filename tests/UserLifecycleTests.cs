@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
-using Rotinik_Backend.Data;
-using Rotinik_Backend.DTOs.User;
+using Rotinik.Data;
+using Rotinik.DTOs.User;
 using Xunit;
 
-namespace Rotinik_Backend.Tests;
+namespace Rotinik.Tests;
 
 // ===================================================================
 // 1. CONFIGURAÇÃO DA FÁBRICA (O Servidor com Testcontainers)

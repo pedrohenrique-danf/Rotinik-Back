@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Rotinik_Backend.Models;
+namespace Rotinik.Models;
 
 public class User
 {

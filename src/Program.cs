@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // DATABASE CONFIGURATION
 // ==========================================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<Rotinik_Backend.Data.AppDbContext>(options =>
+builder.Services.AddDbContext<Rotinik.Data.AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // ==========================================

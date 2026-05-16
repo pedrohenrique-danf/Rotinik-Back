@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>Rotinik_Backend.Tests</RootNamespace>
+    <RootNamespace>Rotinik.Tests</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Rotinik-Backend.csproj" />
+    <ProjectReference Include="..\src\Rotinik.csproj" />
   </ItemGroup>
 
 </Project>

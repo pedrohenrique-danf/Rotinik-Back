@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Rotinik_Backend.Models;
+using Rotinik.Models;
 
-namespace Rotinik_Backend.Data;
+namespace Rotinik.Data;
 
 public class AppDbContext : DbContext
 {
