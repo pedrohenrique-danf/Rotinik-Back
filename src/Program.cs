@@ -38,6 +38,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+builder.Services.AddScoped<Rotinik.Services.IUserService, Rotinik.Services.UserService>();
 
 // ==========================================
 // OPENAPI & SCALAR CONFIGURATION
