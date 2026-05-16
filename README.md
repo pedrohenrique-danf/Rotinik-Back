@@ -12,3 +12,4 @@ Uma API REST construída em .NET 10
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=white)
 - [Guia de Instalação](docs/debian/installation-and-configuration.md)
 - [Guia de Inicialização](docs/debian/project-startup.md)
+- [Comandos Úteis - fish](docs/debian/fish-comands.md)

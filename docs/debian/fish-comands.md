@@ -10,9 +10,7 @@ set target_files (string match -v "*Migrations*" $base_dir/**/*.cs $base_dir/**/
 
 for file in $target_files
     if test -f "$file"
-        printf "\n// ==========================================\n"
-        printf "// Arquivo: %s\n" "$file"
-        printf "// ==========================================\n"
+        printf "File: %s\n" "$file"
         printf '```csharp\n'
         cat "$file"
         printf '\n```\n'
@@ -26,9 +24,7 @@ set base_dir "tests"
 
 for file in $base_dir/**/*
     if test -f "$file"
-        printf "\n// ==========================================\n"
-        printf "// File: %s\n" "$file"
-        printf "// ==========================================\n"
+        printf "File: %s\n" "$file"
         printf '```csharp\n'
         cat "$file"
         printf '\n```\n'

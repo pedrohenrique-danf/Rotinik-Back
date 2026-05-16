@@ -1,4 +1,6 @@
 using System.Text;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -38,6 +40,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+builder.Services.AddAutoMapper(config => 
+{
+    config.AddMaps(typeof(Program).Assembly);
+});
+
 builder.Services.AddScoped<Rotinik.Services.IUserService, Rotinik.Services.UserService>();
 
 // ==========================================
@@ -57,7 +68,8 @@ if (app.Environment.IsDevelopment())
 // ==========================================
 // MIDDLEWARE PIPELINE
 // ==========================================
-// The order here is very important! Authentication MUST come before Authorization.
+app.UseMiddleware<Rotinik.Middleware.GlobalExceptionMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

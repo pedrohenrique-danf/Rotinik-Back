@@ -1,10 +1,13 @@
+// Arquivo: src/Services/UserService.cs
 using Microsoft.IdentityModel.Tokens;
 using Rotinik.Data;
 using Rotinik.DTOs.User;
 using Rotinik.Models;
+using Rotinik.Core.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AutoMapper;
 using System.Text.RegularExpressions;
 
 namespace Rotinik.Services;
@@ -13,66 +16,51 @@ public class UserService : IUserService
 {
     private readonly AppDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly IMapper _mapper;
 
-    public UserService(AppDbContext context, IConfiguration configuration)
+    public UserService(AppDbContext context, IConfiguration configuration, IMapper mapper)
     {
         _context = context;
         _configuration = configuration;
+        _mapper = mapper;
     }
 
     public void CreateUser(UserRegistrationDto dto)
     {
-        if (dto.BirthDate > DateTime.UtcNow)
-            throw new ArgumentException("Birth date cannot be in the future.");
-
         if (_context.Users.Any(u => u.UserName == dto.UserName))
-            throw new InvalidOperationException("UserName in use.");
+            throw new ConflictException("UserName in use.");
 
         if (_context.Users.Any(u => u.Email == dto.Email))
-            throw new InvalidOperationException("Email in use.");
+            throw new ConflictException("Email in use.");
 
-        var passwordPattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$";
-        if (!Regex.IsMatch(dto.Password, passwordPattern))
-            throw new ArgumentException("Password requirements: minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 symbol.");
-
-        var user = new User
-        {
-            Name = dto.Name,
-            BirthDate = dto.BirthDate.ToUniversalTime(),
-            UserName = dto.UserName,
-            Email = dto.Email,
-            Password = BCrypt.Net.BCrypt.HashPassword(dto.Password)  
-        };
+        var user = _mapper.Map<User>(dto);
+        
+        user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);  
 
         _context.Users.Add(user);
         _context.SaveChanges();
     }
 
-    public UserProfileDto? GetPublicProfile(string username)
+    public UserProfileDto GetPublicProfile(string username)
     {
         var user = _context.Users.SingleOrDefault(u => u.UserName == username);
-        if (user == null) return null;
+        if (user == null)  
+            throw new NotFoundException("User not found.");
 
-        return new UserProfileDto
-        {
-            Name = user.Name,
-            UserName = user.UserName
-        };
+        return _mapper.Map<UserProfileDto>(user);
     }
 
     public void UpdateUser(int id, int currentUserId, UserUpdateDto dto)
     {
         if (currentUserId != id)
-            throw new UnauthorizedAccessException("Forbidden");
+            throw new ForbiddenException("Forbidden: You can only update your own profile.");
 
         var user = _context.Users.Find(id);
         if (user == null)
-            throw new KeyNotFoundException("User not found.");
+            throw new NotFoundException("User not found.");
 
         user.Name = dto.Name;
         user.BirthDate = dto.BirthDate.ToUniversalTime();
-
-        // Se quiser atualizar a senha também, adicione a lógica de hash aqui
 
         _context.SaveChanges();
     }
@@ -80,38 +68,32 @@ public class UserService : IUserService
     public void DeleteUser(int id, int currentUserId)
     {
         if (currentUserId != id)
-            throw new UnauthorizedAccessException("Forbidden");
+            throw new ForbiddenException("Forbidden: You can only delete your own profile.");
 
         var user = _context.Users.Find(id);
         if (user == null)
-            throw new KeyNotFoundException("User not found.");
+            throw new NotFoundException("User not found.");
 
         _context.Users.Remove(user);
         _context.SaveChanges();
     }
 
-    public string? Login(UserLoginDto dto)
+    public string Login(UserLoginDto dto)
     {
         var user = _context.Users.SingleOrDefault(u => u.Email == dto.Email);
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-            return null; // Credenciais inválidas
+            throw new UnauthorizedAccessException("Invalid email or password."); // Middleware já mapeia isso para 401
 
         return GenerateJwtToken(user);
     }
 
-    public UserResponseDto? GetCurrentUser(int userId)
+    public UserResponseDto GetCurrentUser(int userId)
     {
         var user = _context.Users.Find(userId);
-        if (user == null) return null;
+        if (user == null)  
+            throw new NotFoundException("User not found.");
 
-        return new UserResponseDto
-        {
-            Id = user.Id,
-            Name = user.Name,
-            BirthDate = user.BirthDate,
-            UserName = user.UserName,
-            Email = user.Email
-        };
+        return _mapper.Map<UserResponseDto>(user);
     }
 
     private string GenerateJwtToken(User user)

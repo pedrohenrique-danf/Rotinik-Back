@@ -73,7 +73,8 @@ public class UserTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         
         var errorResult = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var errorMessage = errorResult.GetProperty("message").GetString();
+        
+        var errorMessage = errorResult.GetProperty("errors").GetProperty("Password")[0].GetString();
         Assert.Contains("Password requirements", errorMessage);
     }
 
@@ -102,8 +103,11 @@ public class UserTests : IntegrationTestBase
         var response = await Client.PostAsJsonAsync(BaseRoute, futureUser);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        
         var errorResult = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Contains("Birth date cannot be in the future.", errorResult.GetProperty("message").GetString());
+        
+        var errorMessage = errorResult.GetProperty("errors").GetProperty("BirthDate")[0].GetString();
+        Assert.Contains("Birth date cannot be in the future.", errorMessage);
     }
 
     [Fact]
