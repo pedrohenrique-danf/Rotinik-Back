@@ -11,4 +11,4 @@ Uma API REST construída em .NET 10
 ![Debian](https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=white)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=white)
 - [Guia de Instalação](docs/debian/installation-and-configuration.md)
-- [Guia de Inicialização](docs/debian/installation-and-configuration.md)
+- [Guia de Inicialização](docs/debian/project-startup.md)
