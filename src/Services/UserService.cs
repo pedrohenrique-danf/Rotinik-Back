@@ -8,19 +8,21 @@ using System.Security.Claims;
 using System.Text;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Rotinik.Settings;
 
 namespace Rotinik.Services;
 
 public class UserService : IUserService
 {
     private readonly AppDbContext _context;
-    private readonly IConfiguration _configuration;
+    private readonly JwtSettings _jwtSettings;
     private readonly IMapper _mapper;
 
-    public UserService(AppDbContext context, IConfiguration configuration, IMapper mapper)
+    public UserService(AppDbContext context, IOptions<JwtSettings> jwtOptions, IMapper mapper)
     {
         _context = context;
-        _configuration = configuration;
+        _jwtSettings = jwtOptions.Value;
         _mapper = mapper;
     }
 
@@ -102,11 +104,10 @@ public class UserService : IUserService
 
     private string GenerateJwtToken(User user)
     {
-        var jwtSecret = _configuration["JwtSettings:Secret"] ?? "TemporaryKeySoEFCoreMigrationDoesNotBreak!";
-        var validIssuer = _configuration["JwtSettings:Issuer"];
-        var validAudience = _configuration["JwtSettings:Audience"];
-
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+        // Olha como fica infinitamente mais limpo e seguro!
+        // Não precisamos mais usar "magic strings" como _configuration["JwtSettings:Secret"]
+        
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -118,8 +119,8 @@ public class UserService : IUserService
         };
 
         var token = new JwtSecurityToken(
-            issuer: validIssuer,
-            audience: validAudience,
+            issuer: _jwtSettings.Issuer,
+            audience: _jwtSettings.Audience,
             claims: claims,
             expires: DateTime.UtcNow.AddHours(2),
             signingCredentials: credentials);

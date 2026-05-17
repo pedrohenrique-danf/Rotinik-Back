@@ -14,11 +14,11 @@ Uma API RESTful construída em .NET para funcionar como o motor do [Rotinik](htt
 
 - [Guia de Instalação](docs/debian/installation-and-configuration.md)
 - [Guia de Inicialização](docs/debian/project-startup.md)
-- [Comandos Úteis - fish](docs/debian/fish-comands.md)
+- [Scripts de Apoio - fish](docs/debian/fish-comands.md)
 
 ### Windows
 ![Windows-11](https://img.shields.io/badge/Windows_11-0078D4?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMSAxMSI%2BPHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0wIDBoNXY1SDB6bTYgMGg1djVINnpNMCA2aDV2NUgwem02IDBoNXY1SDZ6Ii8%2BPC9zdmc%2B)
 
-- [Guia de Instalação](docs/windows/installation-and-configuration.md) - vazia
-- [Guia de Inicialização](docs/windows/project-startup.md) - vazia
-- [Comandos Úteis - PowerShell](docs/windows/powershell-commands.md) - vazia
+- [Guia de Instalação](docs/windows/installation-and-configuration.md) - vazio
+- [Guia de Inicialização](docs/windows/project-startup.md) - vazio
+- [Scripts de Apoio - PowerShell](docs/windows/powershell-commands.md)
