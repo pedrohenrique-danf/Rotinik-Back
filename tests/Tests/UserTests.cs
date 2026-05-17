@@ -118,6 +118,43 @@ public class UserTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    [Fact]
+    public async Task CreateUser_WithDuplicateUserName()
+    {
+        var firstUser = CreateUserDto();
+        await RegisterUser(firstUser);
+
+        var duplicateUserNameUser = CreateUserDto();
+        duplicateUserNameUser.UserName = firstUser.UserName;
+
+        var response = await Client.PostAsJsonAsync(BaseRoute, duplicateUserNameUser);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var errorResult = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Contains("UserName in use.", errorResult.GetProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task Login_WithWrongPassword()
+    {
+        var user = CreateUserDto();
+        await RegisterUser(user);
+
+        var loginData = new UserLoginDto { Email = user.Email, Password = "WrongPassword123!" };
+        var response = await Client.PostAsJsonAsync(LoginRoute, loginData);
+        
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Login_WithNonExistentEmail()
+    {
+        var loginData = new UserLoginDto { Email = "ghost@email.com", Password = "pAssword123!" };
+        var response = await Client.PostAsJsonAsync(LoginRoute, loginData);
+        
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
 
     // ===================================================================
     // SECURITY PATHS
@@ -142,6 +179,35 @@ public class UserTests : IntegrationTestBase
         var response = await Client.PutAsJsonAsync($"{BaseRoute}/{anotherUserId}", updateData);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteUser_DeleteAnotherUser()
+    {
+        var userA = CreateUserDto();
+        await RegisterUser(userA);
+        
+        var token = await LoginUser(userA.Email, userA.Password);
+        SetAuthorizationHeader(token);
+
+        int anotherUserId = 99999;
+        var response = await Client.DeleteAsync($"{BaseRoute}/{anotherUserId}");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AccessProtectedRoutes_WithoutToken()
+    {
+        Client.DefaultRequestHeaders.Authorization = null;
+
+        var getMeResponse = await Client.GetAsync(MeRoute);
+        var updateResponse = await Client.PutAsJsonAsync($"{BaseRoute}/1", new UserUpdateDto());
+        var deleteResponse = await Client.DeleteAsync($"{BaseRoute}/1");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, getMeResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, updateResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, deleteResponse.StatusCode);
     }
 
 
