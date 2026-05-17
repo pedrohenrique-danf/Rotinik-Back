@@ -1,5 +1,6 @@
 using FluentValidation;
 using Rotinik.DTOs.User;
+using Rotinik.Validation.Extensions;
 
 namespace Rotinik.Validation;
 
@@ -8,8 +9,7 @@ public class UserLoginDtoValidator : AbstractValidator<UserLoginDto>
     public UserLoginDtoValidator()
     {
         RuleFor(user => user.Email)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("A valid email is required.");
+            .MustBeValidEmail();
 
         RuleFor(user => user.Password)
             .NotEmpty().WithMessage("Password is required.");
