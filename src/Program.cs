@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using Rotinik.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,11 +17,15 @@ builder.Services.AddDbContext<Rotinik.Data.AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // ==========================================
+// OPTIONS PATTERN CONFIGURATION
+// ==========================================
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+
+// ==========================================
 // AUTHENTICATION CONFIGURATION (JWT)
 // ==========================================
-var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "TemporaryKeySoEFCoreMigrationDoesNotBreak!";
-var validIssuer = builder.Configuration["JwtSettings:Issuer"];
-var validAudience = builder.Configuration["JwtSettings:Audience"];
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+var jwtSecret = jwtSettings?.Secret ?? "TemporaryKeySoEFCoreMigrationDoesNotBreak!";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -29,8 +34,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            ValidAudience = validAudience,
-            ValidIssuer = validIssuer,
+            ValidAudience = jwtSettings?.Audience,
+            ValidIssuer = jwtSettings?.Issuer,
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
