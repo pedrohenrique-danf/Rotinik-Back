@@ -23,7 +23,11 @@ public class GlobalExceptionMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unhandled exception has occurred.");
+            if (ex is BaseAppException)
+                _logger.LogWarning("Business rule triggered: {Message}", ex.Message);
+            else
+                _logger.LogError(ex, "An unhandled exception has occurred.");
+
             await HandleExceptionAsync(context, ex);
         }
     }
@@ -32,17 +36,20 @@ public class GlobalExceptionMiddleware
     {
         context.Response.ContentType = "application/json";
 
-        context.Response.StatusCode = exception switch
+        if (exception is BaseAppException appException)
         {
-            NotFoundException => (int)HttpStatusCode.NotFound,
-            ConflictException => (int)HttpStatusCode.Conflict,
-            ForbiddenException => (int)HttpStatusCode.Forbidden,
-            ValidationException => (int)HttpStatusCode.BadRequest,
-            UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
-            _ => (int)HttpStatusCode.InternalServerError
-        };
+            context.Response.StatusCode = (int)appException.StatusCode;
+        }
+        else
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        }
 
-        var response = new { message = exception.Message };
+        var message = exception is BaseAppException 
+            ? exception.Message 
+            : "An unexpected internal server error occurred.";
+
+        var response = new { message = message };
         var payload = JsonSerializer.Serialize(response);
 
         return context.Response.WriteAsync(payload);

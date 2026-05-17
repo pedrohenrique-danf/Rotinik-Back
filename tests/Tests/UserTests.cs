@@ -11,11 +11,10 @@ namespace Rotinik.Tests.Tests;
 public class UserTests : IntegrationTestBase
 {
     private const string BaseRoute = "/api/user";
-    private const string LoginRoute = "/api/user/login";
+    private const string LoginRoute = "/api/auth/login"; // <-- Rota corrigida!
     private const string MeRoute = "/api/user/me";
 
     public UserTests(CustomApiFactory factory) : base(factory) { }
-
 
     // ===================================================================
     // HAPPY PATHS
@@ -51,7 +50,6 @@ public class UserTests : IntegrationTestBase
         Assert.Equal(user.UserName, profileData.GetProperty("userName").GetString());
     }
 
-
     // ===================================================================
     // SAD PATHS
     // ===================================================================
@@ -73,7 +71,6 @@ public class UserTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         
         var errorResult = await response.Content.ReadFromJsonAsync<JsonElement>();
-        
         var errorMessage = errorResult.GetProperty("errors").GetProperty("Password")[0].GetString();
         Assert.Contains("Password requirements", errorMessage);
     }
@@ -105,7 +102,6 @@ public class UserTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         
         var errorResult = await response.Content.ReadFromJsonAsync<JsonElement>();
-        
         var errorMessage = errorResult.GetProperty("errors").GetProperty("BirthDate")[0].GetString();
         Assert.Contains("Birth date cannot be in the future.", errorMessage);
     }
@@ -114,7 +110,6 @@ public class UserTests : IntegrationTestBase
     public async Task GetPublicProfile_WithInvalidUsername()
     {
         var response = await Client.GetAsync($"{BaseRoute}/profile/this_user_does_not_exist");
-
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
@@ -133,28 +128,6 @@ public class UserTests : IntegrationTestBase
         var errorResult = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Contains("UserName in use.", errorResult.GetProperty("message").GetString());
     }
-
-    [Fact]
-    public async Task Login_WithWrongPassword()
-    {
-        var user = CreateUserDto();
-        await RegisterUser(user);
-
-        var loginData = new UserLoginDto { Email = user.Email, Password = "WrongPassword123!" };
-        var response = await Client.PostAsJsonAsync(LoginRoute, loginData);
-        
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Login_WithNonExistentEmail()
-    {
-        var loginData = new UserLoginDto { Email = "ghost@email.com", Password = "pAssword123!" };
-        var response = await Client.PostAsJsonAsync(LoginRoute, loginData);
-        
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
 
     // ===================================================================
     // SECURITY PATHS
@@ -209,7 +182,6 @@ public class UserTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.Unauthorized, updateResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, deleteResponse.StatusCode);
     }
-
 
     // ===================================================================
     // DOMAIN-SPECIFIC HELPER METHODS

@@ -9,22 +9,22 @@ sudo systemctl start docker
 
 ## Usar .NET
 
-Rodar API:
+Rodar API
 ```sh
 dotnet run --project src/
 ```
 
-Rodar Testes:
+Rodar Testes
 ```sh
 dotnet test
 ```
 
-Atualizar BD:
+Atualizar BD
 ```sh
 dotnet ef database update --project src/
 ```
 
-Delete BD:
+Delete BD
 ```sh
 dotnet ef database drop --project src/ -f
 ```

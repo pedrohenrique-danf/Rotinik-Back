@@ -1,8 +1,8 @@
 # Rotinik Backend API
 
-![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?labelColor=512BD4&color=555555)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18.3-316192?logo=postgresql&logoColor=white&labelColor=316192&color=555555)
-![Docker](https://img.shields.io/badge/Docker-29.1-2496ED?logo=docker&logoColor=white&labelColor=2496ED&color=555555)
+![.NET](https://img.shields.io/badge/.NET-10-512BD4?labelColor=512BD4&color=555555)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-316192?logo=postgresql&logoColor=white&labelColor=316192&color=555555)
+![Docker](https://img.shields.io/badge/Docker-29-2496ED?logo=docker&logoColor=white&labelColor=2496ED&color=555555)
 
 Uma API RESTful construída em .NET para funcionar como o motor do [Rotinik](https://github.com/Hikaro19/Rotinik).
 
