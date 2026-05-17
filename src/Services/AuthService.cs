@@ -1,25 +1,27 @@
-using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
-using Rotinik.Data;
+using Rotinik.Data.Repositories;
 using Rotinik.DTOs.User;
 
 namespace Rotinik.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly AppDbContext _context;
+    private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public AuthService(AppDbContext context, ITokenService tokenService)
+    public AuthService(IUserRepository userRepository, ITokenService tokenService, IPasswordHasher passwordHasher)
     {
-        _context = context;
+        _userRepository = userRepository;
         _tokenService = tokenService;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<string?> LoginAsync(UserLoginDto dto)
     {
-        var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == dto.Email);
-        if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
+        var user = await _userRepository.GetByEmailAsync(dto.Email);
+        
+        if (user == null || !_passwordHasher.VerifyPassword(dto.Password, user.Password))
             throw new UnauthorizedException("Invalid email or password.");
 
         return _tokenService.GenerateJwtToken(user);

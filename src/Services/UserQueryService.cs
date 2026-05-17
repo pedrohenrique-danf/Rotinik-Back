@@ -1,25 +1,24 @@
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
-using Rotinik.Data;
+using Rotinik.Data.Repositories;
 using Rotinik.DTOs.User;
 
 namespace Rotinik.Services;
 
 public class UserQueryService : IUserQueryService
 {
-    private readonly AppDbContext _context;
+    private readonly IUserRepository _repository;
     private readonly IMapper _mapper;
 
-    public UserQueryService(AppDbContext context, IMapper mapper)
+    public UserQueryService(IUserRepository repository, IMapper mapper)
     {
-        _context = context;
+        _repository = repository;
         _mapper = mapper;
     }
 
     public async Task<UserProfileDto?> GetPublicProfileAsync(string username)
     {
-        var user = await _context.Users.SingleOrDefaultAsync(u => u.UserName == username);
+        var user = await _repository.GetByUserNameAsync(username);
         if (user == null)  
             throw new NotFoundException("User not found.");
 
@@ -28,7 +27,7 @@ public class UserQueryService : IUserQueryService
 
     public async Task<UserResponseDto?> GetCurrentUserAsync(int userId)
     {
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _repository.GetByIdAsync(userId);
         if (user == null)  
             throw new NotFoundException("User not found.");
 
