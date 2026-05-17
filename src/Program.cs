@@ -54,11 +54,12 @@ builder.Services.AddAutoMapper(config =>
     config.AddMaps(typeof(Program).Assembly);
 });
 
-builder.Services.AddScoped<Rotinik.Services.ITokenService, Rotinik.Services.TokenService>();
+builder.Services.AddScoped<Rotinik.Data.Repositories.IUserRepository, Rotinik.Data.Repositories.UserRepository>();
 builder.Services.AddScoped<Rotinik.Services.ITokenService, Rotinik.Services.TokenService>();
 builder.Services.AddScoped<Rotinik.Services.IUserCommandService, Rotinik.Services.UserCommandService>();
 builder.Services.AddScoped<Rotinik.Services.IUserQueryService, Rotinik.Services.UserQueryService>();
 builder.Services.AddScoped<Rotinik.Services.IAuthService, Rotinik.Services.AuthService>();
+builder.Services.AddSingleton<Rotinik.Services.IPasswordHasher, Rotinik.Services.PasswordHasher>();
 
 // ==========================================
 // OPENAPI & SCALAR CONFIGURATION
