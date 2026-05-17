@@ -16,14 +16,14 @@ namespace Rotinik.Services;
 public class UserService : IUserService
 {
     private readonly AppDbContext _context;
-    private readonly JwtSettings _jwtSettings;
     private readonly IMapper _mapper;
+    private readonly ITokenService _tokenService;
 
-    public UserService(AppDbContext context, IOptions<JwtSettings> jwtOptions, IMapper mapper)
+    public UserService(AppDbContext context, IMapper mapper, ITokenService tokenService)
     {
         _context = context;
-        _jwtSettings = jwtOptions.Value;
         _mapper = mapper;
+        _tokenService = tokenService;
     }
 
     public async Task CreateUserAsync(UserRegistrationDto dto)
@@ -90,7 +90,7 @@ public class UserService : IUserService
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
             throw new UnauthorizedAccessException("Invalid email or password.");
 
-        return GenerateJwtToken(user);
+        return _tokenService.GenerateJwtToken(user);
     }
 
     public async Task<UserResponseDto?> GetCurrentUserAsync(int userId)
@@ -100,31 +100,5 @@ public class UserService : IUserService
             throw new NotFoundException("User not found.");
 
         return _mapper.Map<UserResponseDto>(user);
-    }
-
-    private string GenerateJwtToken(User user)
-    {
-        // Olha como fica infinitamente mais limpo e seguro!
-        // Não precisamos mais usar "magic strings" como _configuration["JwtSettings:Secret"]
-        
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("name", user.Name),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: _jwtSettings.Issuer,
-            audience: _jwtSettings.Audience,
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(2),
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

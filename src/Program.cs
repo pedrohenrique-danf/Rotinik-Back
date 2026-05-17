@@ -54,6 +54,7 @@ builder.Services.AddAutoMapper(config =>
     config.AddMaps(typeof(Program).Assembly);
 });
 
+builder.Services.AddScoped<Rotinik.Services.ITokenService, Rotinik.Services.TokenService>();
 builder.Services.AddScoped<Rotinik.Services.IUserService, Rotinik.Services.UserService>();
 
 // ==========================================
