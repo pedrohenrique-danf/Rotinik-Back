@@ -1,6 +1,8 @@
+using System.Net;
+
 namespace Rotinik.Core.Exceptions;
 
-public class ConflictException : Exception
+public class ConflictException : BaseAppException
 {
-    public ConflictException(string message) : base(message) { }
+    public ConflictException(string message) : base(message, HttpStatusCode.Conflict) { }
 }

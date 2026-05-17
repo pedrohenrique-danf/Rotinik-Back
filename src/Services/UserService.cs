@@ -88,7 +88,7 @@ public class UserService : IUserService
     {
         var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == dto.Email);
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-            throw new UnauthorizedAccessException("Invalid email or password.");
+            throw new UnauthorizedException("Invalid email or password.");
 
         return _tokenService.GenerateJwtToken(user);
     }
