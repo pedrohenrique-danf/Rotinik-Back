@@ -21,18 +21,18 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public IActionResult CreateUser(UserRegistrationDto dto)
+    public async Task<IActionResult> CreateUser(UserRegistrationDto dto)
     {
-        _userService.CreateUser(dto);
+        await _userService.CreateUserAsync(dto);
         return StatusCode(201, new { message = "User created" });
     }
 
     [HttpGet("profile/{username}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult GetPublicProfile(string username)
+    public async Task<IActionResult> GetPublicProfile(string username)
     {
-        var profile = _userService.GetPublicProfile(username);
+        var profile = await _userService.GetPublicProfileAsync(username);
         return Ok(profile);
     }
 
@@ -41,10 +41,10 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult UpdateUser(int id, UserUpdateDto dto)
+    public async Task<IActionResult> UpdateUser(int id, UserUpdateDto dto)
     {
         var currentUserId = GetCurrentUserId();
-        _userService.UpdateUser(id, currentUserId, dto);
+        await _userService.UpdateUserAsync(id, currentUserId, dto);
         return NoContent();  
     }
 
@@ -53,19 +53,19 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult DeleteUser(int id)
+    public async Task<IActionResult> DeleteUser(int id)
     {
         var currentUserId = GetCurrentUserId();
-        _userService.DeleteUser(id, currentUserId);
+        await _userService.DeleteUserAsync(id, currentUserId);
         return NoContent();
     }
 
     [HttpPost("login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public IActionResult Login(UserLoginDto dto)
+    public async Task<IActionResult> Login(UserLoginDto dto)
     {
-        var token = _userService.Login(dto);
+        var token = await _userService.LoginAsync(dto);
         return Ok(new { token = token, message = "Login successful!" });
     }
 
@@ -74,13 +74,13 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult GetCurrentUser()
+    public async Task<IActionResult> GetCurrentUser()
     {
         var currentUserId = GetCurrentUserId();
         if (currentUserId == 0)
             return Unauthorized(new { message = "Invalid token payload." });
 
-        var response = _userService.GetCurrentUser(currentUserId);
+        var response = await _userService.GetCurrentUserAsync(currentUserId);
         return Ok(response);
     }
 

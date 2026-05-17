@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace Rotinik.Services;
 
@@ -23,12 +24,12 @@ public class UserService : IUserService
         _mapper = mapper;
     }
 
-    public void CreateUser(UserRegistrationDto dto)
+    public async Task CreateUserAsync(UserRegistrationDto dto)
     {
-        if (_context.Users.Any(u => u.UserName == dto.UserName))
+        if (await _context.Users.AnyAsync(u => u.UserName == dto.UserName))
             throw new ConflictException("UserName in use.");
 
-        if (_context.Users.Any(u => u.Email == dto.Email))
+        if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             throw new ConflictException("Email in use.");
 
         var user = _mapper.Map<User>(dto);
@@ -36,58 +37,63 @@ public class UserService : IUserService
         user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);  
 
         _context.Users.Add(user);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
-    public UserProfileDto GetPublicProfile(string username)
+    public async Task<UserProfileDto?> GetPublicProfileAsync(string username)
     {
-        var user = _context.Users.SingleOrDefault(u => u.UserName == username);
+        var user = await _context.Users.SingleOrDefaultAsync(u => u.UserName == username);
         if (user == null)  
             throw new NotFoundException("User not found.");
 
         return _mapper.Map<UserProfileDto>(user);
     }
 
-    public void UpdateUser(int id, int currentUserId, UserUpdateDto dto)
+    public async Task UpdateUserAsync(int id, int currentUserId, UserUpdateDto dto)
     {
         if (currentUserId != id)
             throw new ForbiddenException("Forbidden: You can only update your own profile.");
 
-        var user = _context.Users.Find(id);
+        var user = await _context.Users.FindAsync(id);
         if (user == null)
             throw new NotFoundException("User not found.");
 
         user.Name = dto.Name;
         user.BirthDate = dto.BirthDate.ToUniversalTime();
 
-        _context.SaveChanges();
+        if (!string.IsNullOrEmpty(dto.Password))
+        {
+            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+        }
+
+        await _context.SaveChangesAsync();
     }
 
-    public void DeleteUser(int id, int currentUserId)
+    public async Task DeleteUserAsync(int id, int currentUserId)
     {
         if (currentUserId != id)
             throw new ForbiddenException("Forbidden: You can only delete your own profile.");
 
-        var user = _context.Users.Find(id);
+        var user = await _context.Users.FindAsync(id);
         if (user == null)
             throw new NotFoundException("User not found.");
 
         _context.Users.Remove(user);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
-    public string Login(UserLoginDto dto)
+    public async Task<string?> LoginAsync(UserLoginDto dto)
     {
-        var user = _context.Users.SingleOrDefault(u => u.Email == dto.Email);
+        var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == dto.Email);
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-            throw new UnauthorizedAccessException("Invalid email or password."); // Middleware já mapeia isso para 401
+            throw new UnauthorizedAccessException("Invalid email or password.");
 
         return GenerateJwtToken(user);
     }
 
-    public UserResponseDto GetCurrentUser(int userId)
+    public async Task<UserResponseDto?> GetCurrentUserAsync(int userId)
     {
-        var user = _context.Users.Find(userId);
+        var user = await _context.Users.FindAsync(userId);
         if (user == null)  
             throw new NotFoundException("User not found.");
 
