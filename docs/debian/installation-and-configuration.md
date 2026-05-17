@@ -11,6 +11,7 @@ Instalaremos e configuraremos:
 
 ```sh
 sudo apt update
+sudo apt install -y fish eza
 ```
 
 ### .NET 10.0 SDK

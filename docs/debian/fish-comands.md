@@ -1,60 +1,33 @@
-mostrar estrutura de pastas:
-```sh
-eza --tree -I "artifacts|bin|obj"
+# Scripts de Apoio - fish 🐟
+
+## Preparação
+
+```bash
+chmod +x *.fish
 ```
 
-mostrar `src/`:
-```sh
-set base_dir "src"
-set target_files (string match -v "*Migrations*" $base_dir/**/*.cs $base_dir/**/*.json)
+## Mostrar Arvore de Pastas
+Exibe a árvore de diretórios do projeto, ignorando automaticamente pastas de build e configurações (como bin, obj, .git, etc).
 
-for file in $target_files
-    if test -f "$file"
-        printf "File: %s\n" "$file"
-        printf '```csharp\n'
-        cat "$file"
-        printf '\n```\n'
-    end
-end
+Como usar:
+
+```bash
+# Mostra a árvore da pasta atual
+fish docs/scripts/show_tree.fish
+
+# Mostra a árvore de uma pasta específica (ex: src)
+fish docs/scripts/show_tree.fish src
 ```
 
-mostrar `test/`:
-```sh
-set base_dir "tests"
+## Mostrar Código por Arquivo
+Lê os arquivos do diretório escolhido e os exibe no terminal formatados em blocos de Markdown, com o syntax highlighting correto. Ideal para copiar e colar em documentações ou enviar para IAs.
 
-for file in $base_dir/**/*
-    if test -f "$file"
-        printf "File: %s\n" "$file"
-        printf '```csharp\n'
-        cat "$file"
-        printf '\n```\n'
-    end
-end
-```
+Como usar:
 
-mostrar tudo:
-```sh
-set base_dir "."
+```bash
+# Extrai todo o código da pasta atual
+fish docs/scripts/show_code.fish
 
-set target_files (string match -v -r '/(Migrations|artifacts|obj|bin|docs)/' $base_dir/**/*.cs $base_dir/**/*.json)
-
-for file in $target_files
-    if test -f "$file"
-        printf "File: %s\n" "$file"
-        
-        set ext (string split -r -m1 . "$file")[-1]
-        
-        if test "$ext" = "cs"
-            printf '```csharp\n'
-        else if test "$ext" = "json"
-            printf '```json\n'
-        else
-            printf '
-```text\n'
-        end
-        
-        cat "$file"
-        printf '\n```\n\n'
-    end
-end
+# Extrai o código de uma pasta específica (ex: src)
+fish docs/scripts/show_code.fish src
 ```
