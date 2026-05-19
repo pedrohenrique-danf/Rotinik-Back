@@ -67,4 +67,19 @@ public class UserCommandService : IUserCommandService
         _repository.Remove(user);
         await _repository.SaveChangesAsync();
     }
+
+    public async Task ActivatePremiumAsync(int currentUserId)
+    {
+        var user = await _repository.GetByIdAsync(currentUserId);
+        
+        if (user == null)
+            throw new NotFoundException("User not found.");
+
+        if (user.isPremium)
+            throw new ConflictException("Your account is already Premium.");
+
+        user.isPremium = true;
+
+        await _repository.SaveChangesAsync();
+    }
 }

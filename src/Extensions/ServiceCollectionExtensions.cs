@@ -45,7 +45,11 @@ public static class ServiceCollectionExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("PremiumOnly", policy => 
+                policy.RequireClaim("isPremium", "True"));
+        });
         
         return services;
     }

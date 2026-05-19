@@ -83,4 +83,31 @@ public class UserController : ControllerBase
         int.TryParse(userIdClaim, out int userId);
         return userId;
     }
+
+    [Authorize(Policy = "PremiumOnly")]
+    [HttpGet("conteudo-vip")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public IActionResult GetPremiumContent()
+    {
+        return Ok(new 
+        { 
+            message = "Bem-vindo à área VIP! Este conteúdo é exclusivo para assinantes Premium." 
+        });
+    }
+
+    [Authorize]
+    [HttpPost("premium")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpgradeToPremium()
+    {
+        var currentUserId = GetCurrentUserId();
+        
+        await _commandService.ActivatePremiumAsync(currentUserId);
+        
+        return Ok(new { message = "Parabéns! Sua conta agora é Premium." });
+    }
 }

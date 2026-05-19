@@ -7,4 +7,5 @@ public interface IUserCommandService
     Task CreateUserAsync(UserRegistrationDto dto);
     Task UpdateUserAsync(int id, int currentUserId, UserUpdateDto dto);
     Task DeleteUserAsync(int id, int currentUserId);
+    Task ActivatePremiumAsync(int currentUserId);
 }
