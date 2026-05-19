@@ -13,7 +13,6 @@ public class UserController : ControllerBase
     private readonly IUserCommandService _commandService;
     private readonly IUserQueryService _queryService;
 
-    // O controller de User agora injeta apenas leitura e escrita, sem saber como gerar tokens
     public UserController(IUserCommandService commandService, IUserQueryService queryService)
     {
         _commandService = commandService;

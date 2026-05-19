@@ -4,5 +4,6 @@ namespace Rotinik.Services;
 
 public interface IAuthService
 {
-    Task<string?> LoginAsync(UserLoginDto dto);
+    Task<AuthResponseDto> LoginAsync(UserLoginDto dto);
+    Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto);
 }

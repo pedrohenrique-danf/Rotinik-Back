@@ -10,7 +10,7 @@ public class UserCommandService : IUserCommandService
 {
     private readonly IUserRepository _repository;
     private readonly IMapper _mapper;
-    private readonly IPasswordHasher _passwordHasher; // <-- Adicionado
+    private readonly IPasswordHasher _passwordHasher;
 
     public UserCommandService(IUserRepository repository, IMapper mapper, IPasswordHasher passwordHasher)
     {
@@ -29,7 +29,6 @@ public class UserCommandService : IUserCommandService
 
         var user = _mapper.Map<User>(dto);
         
-        // <-- Usando a abstração em vez da chamada estática
         user.Password = _passwordHasher.HashPassword(dto.Password);  
 
         await _repository.AddAsync(user);
@@ -50,7 +49,6 @@ public class UserCommandService : IUserCommandService
 
         if (!string.IsNullOrEmpty(dto.Password))
         {
-            // <-- Usando a abstração em vez da chamada estática
             user.Password = _passwordHasher.HashPassword(dto.Password);
         }
 

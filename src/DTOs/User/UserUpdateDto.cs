@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Rotinik.DTOs.User;
 
 public class UserUpdateDto

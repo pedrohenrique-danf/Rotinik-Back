@@ -1,4 +1,4 @@
-@Rotinik_HostAddress = http://localhost:5206
+@Rotinik_HostAddress = http://localhost:5025
 
 GET {{Rotinik_HostAddress}}/weatherforecast/
 Accept: application/json

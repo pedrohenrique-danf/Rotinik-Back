@@ -20,7 +20,16 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login(UserLoginDto dto)
     {
-        var token = await _authService.LoginAsync(dto);
-        return Ok(new { token = token, message = "Login successful!" });
+        var response = await _authService.LoginAsync(dto);
+        return Ok(new { data = response, message = "Login successful!" });
+    }
+
+    [HttpPost("refresh-token")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
+    {
+        var response = await _authService.RefreshTokenAsync(dto);
+        return Ok(new { data = response, message = "Token refreshed successfully!" });
     }
 }

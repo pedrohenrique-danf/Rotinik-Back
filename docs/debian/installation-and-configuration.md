@@ -39,7 +39,7 @@ git clone https://github.com/pedrohenrique-danf/Rotinik-Back.git
 
 ```sh
 # PostgreSQL
-sudo systemctl start postgres
+sudo systemctl start postgresql
 sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
 
 # Docker
@@ -69,27 +69,28 @@ sudo systemctl start docker
 2. Ponha o conteúdo abaixo no arquivo.
 
 ```json
-   {
-       "ConnectionStrings": {
-           "DefaultConnection": "Host=localhost;Port=5432;Database=rotinik_db;Username=postgres;Password=postgres"
-       },
-       "JwtSettings": {
-           "Secret": "RotinikSuperSecretKeyThatNeedsToBeAtLeast32CharactersLong!",
-           "Issuer": "RotinikAPI",
-           "Audience": "RotinikClients"
-       },
-       "Logging": {
-           "LogLevel": {
-               "Default": "Information",
-               "Microsoft.AspNetCore": "Warning"
-           }
-       },
-       "AllowedHosts": "*"
-   }
+{
+    "Logging": {
+        "LogLevel": {
+            "Default": "Information",
+            "Microsoft.AspNetCore": "Warning"
+        }
+    },
+    "ConnectionStrings": {
+        "RotinikConnection": "Host=localhost;Port=5432;Database=rotinik_db;Username=postgres;Password=postgres"
+    },
+    "JwtSettings": {
+        "Secret": "RotinikSuperSecretKeyQueDeveTerPeloMenos32Caracteres!", 
+        "Issuer": "RotinikApi",
+        "Audience": "RotinikApp",
+        "ExpiresInHours": 8
+    }
+}
 ```
 
 rode:
 ```sh
+dotnet ef migrations add new_models --project src/Rotinik.csproj
 dotnet ef database update --project src/Rotinik.csproj
 ```
 

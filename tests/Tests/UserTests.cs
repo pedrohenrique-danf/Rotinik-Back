@@ -210,7 +210,8 @@ public class UserTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var loginResult = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var token = loginResult.GetProperty("token").GetString();
+        
+        var token = loginResult.GetProperty("data").GetProperty("accessToken").GetString();
         
         Assert.False(string.IsNullOrEmpty(token));
         return token!;
