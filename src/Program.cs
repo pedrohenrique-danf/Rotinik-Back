@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ==========================================
 // DATABASE CONFIGURATION
 // ==========================================
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("RotinikConnection");
 builder.Services.AddDbContext<Rotinik.Data.AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -24,8 +24,7 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSet
 // ==========================================
 // AUTHENTICATION CONFIGURATION (JWT)
 // ==========================================
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-var jwtSecret = jwtSettings?.Secret ?? "TemporaryKeySoEFCoreMigrationDoesNotBreak!";
+var jwtSecret = "RotinikSuperSecretKeyQueDeveTerPeloMenos32Caracteres!";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -34,8 +33,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-            ValidAudience = jwtSettings?.Audience,
-            ValidIssuer = jwtSettings?.Issuer,
+            ValidAudience = "RotinikApp",
+            ValidIssuer = "RotinikApi",
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
@@ -49,7 +48,7 @@ builder.Services.AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-builder.Services.AddAutoMapper(config => 
+builder.Services.AddAutoMapper(config =>
 {
     config.AddMaps(typeof(Program).Assembly);
 });

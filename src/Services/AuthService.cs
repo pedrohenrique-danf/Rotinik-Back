@@ -20,8 +20,15 @@ public class AuthService : IAuthService
     public async Task<string?> LoginAsync(UserLoginDto dto)
     {
         var user = await _userRepository.GetByEmailAsync(dto.Email);
-        
-        if (user == null || !_passwordHasher.VerifyPassword(dto.Password, user.Password))
+
+        Console.WriteLine($">>> User found: {user != null}");
+
+        if (user == null)
+            throw new UnauthorizedException("Invalid email or password.");
+
+        Console.WriteLine($">>> Password match: {_passwordHasher.VerifyPassword(dto.Password, user.Password)}");
+
+        if (!_passwordHasher.VerifyPassword(dto.Password, user.Password))
             throw new UnauthorizedException("Invalid email or password.");
 
         return _tokenService.GenerateJwtToken(user);
