@@ -50,7 +50,7 @@ public class GlobalExceptionMiddleware
         var message = exception is BaseAppException
             ? exception.Message
             : isDevelopment
-                ? $"{exception.Message} | {exception.StackTrace}" // 👈 mostra o erro real em dev
+                ? $"{exception.Message} | {exception.StackTrace}"
                 : "An unexpected internal server error occurred.";
 
         var response = new { message };

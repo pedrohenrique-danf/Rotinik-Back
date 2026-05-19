@@ -1,4 +1,3 @@
-// src/Extensions/ServiceCollectionExtensions.cs
 using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -69,6 +68,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserQueryService, UserQueryService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IPaymentSimulationService, PaymentSimulationService>();
 
         return services;
     }
