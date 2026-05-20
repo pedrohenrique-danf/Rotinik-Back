@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Rotinik.Data.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Rotinik.Data;
 using Rotinik.Services;
 using System.Security.Claims;
 
@@ -10,17 +11,17 @@ namespace Rotinik.Controllers;
 [ApiController]
 public class PaymentController : ControllerBase
 {
-    private readonly IPaymentSimulationService _paymentService;
-    private readonly IPaymentRepository _paymentRepository;
+    private readonly PaymentSimulationService _paymentService;
+    private readonly AppDbContext _context;
     private readonly IServiceScopeFactory _scopeFactory;
 
     public PaymentController(
-        IPaymentSimulationService paymentService, 
-        IPaymentRepository paymentRepository,
+        PaymentSimulationService paymentService, 
+        AppDbContext context,
         IServiceScopeFactory scopeFactory)
     {
         _paymentService = paymentService;
-        _paymentRepository = paymentRepository;
+        _context = context;
         _scopeFactory = scopeFactory;
     }
 
@@ -37,7 +38,7 @@ public class PaymentController : ControllerBase
             await Task.Delay(10000); 
 
             using var scope = _scopeFactory.CreateScope();
-            var bgPaymentService = scope.ServiceProvider.GetRequiredService<IPaymentSimulationService>();
+            var bgPaymentService = scope.ServiceProvider.GetRequiredService<PaymentSimulationService>();
             
             await bgPaymentService.ProcessPaymentSuccessAsync(transactionId);
         });
@@ -54,7 +55,7 @@ public class PaymentController : ControllerBase
     [HttpGet("status/{transactionId}")]
     public async Task<IActionResult> CheckStatus(string transactionId)
     {
-        var payment = await _paymentRepository.GetByTransactionIdAsync(transactionId);
+        var payment = await _context.Payments.SingleOrDefaultAsync(p => p.TransactionId == transactionId);
         if (payment == null) return NotFound();
 
         return Ok(new 

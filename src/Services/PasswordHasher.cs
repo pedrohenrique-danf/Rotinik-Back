@@ -1,6 +1,6 @@
 namespace Rotinik.Services;
 
-public class PasswordHasher : IPasswordHasher
+public class PasswordHasher
 {
     public string HashPassword(string password)
     {

@@ -9,7 +9,7 @@ using Rotinik.Settings;
 
 namespace Rotinik.Services;
 
-public class TokenService : ITokenService
+public class TokenService
 {
     private readonly JwtSettings _jwtSettings;
 

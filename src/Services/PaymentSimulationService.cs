@@ -1,23 +1,18 @@
-using Rotinik.Data.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Rotinik.Data;
 using Rotinik.Models;
 
 namespace Rotinik.Services;
 
-public interface IPaymentSimulationService
+public class PaymentSimulationService
 {
-    Task<string> GenerateCheckoutAsync(int userId, decimal amount);
-    Task ProcessPaymentSuccessAsync(string transactionId);
-}
+    private readonly AppDbContext _context;
+    private readonly UserService _userService;
 
-public class PaymentSimulationService : IPaymentSimulationService
-{
-    private readonly IPaymentRepository _paymentRepository;
-    private readonly IUserCommandService _userCommandService;
-
-    public PaymentSimulationService(IPaymentRepository paymentRepository, IUserCommandService userCommandService)
+    public PaymentSimulationService(AppDbContext context, UserService userService)
     {
-        _paymentRepository = paymentRepository;
-        _userCommandService = userCommandService;
+        _context = context;
+        _userService = userService;
     }
 
     public async Task<string> GenerateCheckoutAsync(int userId, decimal amount)
@@ -32,22 +27,23 @@ public class PaymentSimulationService : IPaymentSimulationService
             Status = PaymentStatus.Pending
         };
 
-        await _paymentRepository.AddAsync(payment);
-        await _paymentRepository.SaveChangesAsync();
+        _context.Payments.Add(payment);
+        await _context.SaveChangesAsync();
 
         return transactionId;
     }
 
     public async Task ProcessPaymentSuccessAsync(string transactionId)
     {
-        var payment = await _paymentRepository.GetByTransactionIdAsync(transactionId);
+        var payment = await _context.Payments.SingleOrDefaultAsync(p => p.TransactionId == transactionId);
+        
         if (payment == null || payment.Status != PaymentStatus.Pending) return;
 
         payment.Status = PaymentStatus.Paid;
         payment.PaidAt = DateTime.UtcNow;
         
-        await _paymentRepository.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-        await _userCommandService.ActivatePremiumAsync(payment.UserId);
+        await _userService.ActivatePremiumAsync(payment.UserId);
     }
 }

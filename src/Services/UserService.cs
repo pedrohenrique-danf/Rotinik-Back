@@ -1,38 +1,38 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
-using Rotinik.Data.Repositories;
+using Rotinik.Data;
 using Rotinik.DTOs.User;
 using Rotinik.Models;
 
 namespace Rotinik.Services;
 
-public class UserCommandService : IUserCommandService
+public class UserService
 {
-    private readonly IUserRepository _repository;
+    private readonly AppDbContext _context;
     private readonly IMapper _mapper;
-    private readonly IPasswordHasher _passwordHasher;
+    private readonly PasswordHasher _passwordHasher;
 
-    public UserCommandService(IUserRepository repository, IMapper mapper, IPasswordHasher passwordHasher)
+    public UserService(AppDbContext context, IMapper mapper, PasswordHasher passwordHasher)
     {
-        _repository = repository;
+        _context = context;
         _mapper = mapper;
         _passwordHasher = passwordHasher;
     }
 
     public async Task CreateUserAsync(UserRegistrationDto dto)
     {
-        if (await _repository.GetByUserNameAsync(dto.UserName) != null)
+        if (await _context.Users.AnyAsync(u => u.UserName == dto.UserName))
             throw new ConflictException("UserName in use.");
 
-        if (await _repository.GetByEmailAsync(dto.Email) != null)
+        if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             throw new ConflictException("Email in use.");
 
         var user = _mapper.Map<User>(dto);
-        
         user.Password = _passwordHasher.HashPassword(dto.Password);  
 
-        await _repository.AddAsync(user);
-        await _repository.SaveChangesAsync();
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
     }
 
     public async Task UpdateUserAsync(int id, int currentUserId, UserUpdateDto dto)
@@ -40,7 +40,7 @@ public class UserCommandService : IUserCommandService
         if (currentUserId != id)
             throw new ForbiddenException("Forbidden: You can only update your own profile.");
 
-        var user = await _repository.GetByIdAsync(id);
+        var user = await _context.Users.FindAsync(id);
         if (user == null)
             throw new NotFoundException("User not found.");
 
@@ -48,11 +48,9 @@ public class UserCommandService : IUserCommandService
         user.BirthDate = dto.BirthDate.ToUniversalTime();
 
         if (!string.IsNullOrEmpty(dto.Password))
-        {
             user.Password = _passwordHasher.HashPassword(dto.Password);
-        }
 
-        await _repository.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteUserAsync(int id, int currentUserId)
@@ -60,18 +58,17 @@ public class UserCommandService : IUserCommandService
         if (currentUserId != id)
             throw new ForbiddenException("Forbidden: You can only delete your own profile.");
 
-        var user = await _repository.GetByIdAsync(id);
+        var user = await _context.Users.FindAsync(id);
         if (user == null)
             throw new NotFoundException("User not found.");
 
-        _repository.Remove(user);
-        await _repository.SaveChangesAsync();
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
     }
 
     public async Task ActivatePremiumAsync(int currentUserId)
     {
-        var user = await _repository.GetByIdAsync(currentUserId);
-        
+        var user = await _context.Users.FindAsync(currentUserId);
         if (user == null)
             throw new NotFoundException("User not found.");
 
@@ -79,7 +76,24 @@ public class UserCommandService : IUserCommandService
             throw new ConflictException("Your account is already Premium.");
 
         user.isPremium = true;
+        await _context.SaveChangesAsync();
+    }
 
-        await _repository.SaveChangesAsync();
+    public async Task<UserProfileDto?> GetPublicProfileAsync(string username)
+    {
+        var user = await _context.Users.SingleOrDefaultAsync(u => u.UserName == username);
+        if (user == null)  
+            throw new NotFoundException("User not found.");
+
+        return _mapper.Map<UserProfileDto>(user);
+    }
+
+    public async Task<UserResponseDto?> GetCurrentUserAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)  
+            throw new NotFoundException("User not found.");
+
+        return _mapper.Map<UserResponseDto>(user);
     }
 }
