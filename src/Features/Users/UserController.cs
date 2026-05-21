@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rotinik.Features.Users.DTOs;
-using System.Security.Claims;
 using Rotinik.Core.Extensions;
 
 namespace Rotinik.Features.Users;
@@ -15,6 +14,24 @@ public class UserController : ControllerBase
     public UserController(UserService userService)
     {
         _userService = userService;
+    }
+
+    [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Login(UserLoginDto dto)
+    {
+        var response = await _userService.LoginAsync(dto);
+        return Ok(new { data = response, message = "Login successful!" });
+    }
+
+    [HttpPost("refresh-token")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
+    {
+        var response = await _userService.RefreshTokenAsync(dto);
+        return Ok(new { data = response, message = "Token refreshed successfully!" });
     }
 
     [HttpPost]
@@ -85,18 +102,5 @@ public class UserController : ControllerBase
         { 
             message = "Bem-vindo à área VIP! Este conteúdo é exclusivo para assinantes Premium." 
         });
-    }
-
-    [Authorize]
-    [HttpPost("premium")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> UpgradeToPremium()
-    {
-        var currentUserId = User.GetCurrentUserId();
-        await _userService.ActivatePremiumAsync(currentUserId);
-        return Ok(new { message = "Parabéns! Sua conta agora é Premium." });
     }
 }

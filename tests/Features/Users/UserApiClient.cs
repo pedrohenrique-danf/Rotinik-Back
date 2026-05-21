@@ -1,27 +1,16 @@
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Rotinik.Features.Users.DTOs;
 
-namespace Rotinik.Tests.Core;
+namespace Rotinik.Tests.Features.Users;
 
-public class RotinikApiClient
+public class UserApiClient
 {
     private readonly HttpClient _client;
 
-    public RotinikApiClient(HttpClient client)
+    public UserApiClient(HttpClient client)
     {
         _client = client;
-    }
-
-    public void SetToken(string token)
-    {
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-    }
-    
-    public void ClearToken()
-    {
-        _client.DefaultRequestHeaders.Authorization = null;
     }
 
     public async Task<HttpResponseMessage> RegisterUserAsync(UserRegistrationDto dto) 
@@ -40,10 +29,10 @@ public class RotinikApiClient
         => await _client.DeleteAsync($"/api/user/{id}");
 
     public async Task<HttpResponseMessage> LoginAsync(UserLoginDto dto) 
-        => await _client.PostAsJsonAsync("/api/auth/login", dto);
+        => await _client.PostAsJsonAsync("/api/user/login", dto);
         
     public async Task<HttpResponseMessage> RefreshTokenAsync(RefreshTokenRequestDto dto)
-        => await _client.PostAsJsonAsync("/api/auth/refresh-token", dto);
+        => await _client.PostAsJsonAsync("/api/user/refresh-token", dto);
 
     public async Task<string> LoginAndGetTokenAsync(string email, string password)
     {

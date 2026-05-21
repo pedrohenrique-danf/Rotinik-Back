@@ -9,38 +9,115 @@ namespace Rotinik.Tests.Features.Users;
 
 public class UserTests : IntegrationTestBase
 {
-    public UserTests(CustomApiFactory factory) : base(factory) { }
+    private readonly UserApiClient _userApi;
+
+    public UserTests(CustomApiFactory factory) : base(factory) 
+    { 
+        _userApi = new UserApiClient(Client);
+    }
 
     [Fact]
     public async Task UserLifecycle()
     {
         var newUser = UserDataBuilder.CreateValidRegistrationDto();
-        await ApiClient.RegisterUserAsync(newUser);
+        await _userApi.RegisterUserAsync(newUser);
 
-        var token = await ApiClient.LoginAndGetTokenAsync(newUser.Email, newUser.Password);
-        ApiClient.SetToken(token);
+        var token = await _userApi.LoginAndGetTokenAsync(newUser.Email, newUser.Password);
+        SetToken(token);
 
-        var meResponse = await ApiClient.GetCurrentUserAsync();
+        var meResponse = await _userApi.GetCurrentUserAsync();
         var meJson = await meResponse.Content.ReadFromJsonAsync<JsonElement>();
         var userId = meJson.GetProperty("id").GetInt32();
 
-        var updateResponse = await ApiClient.UpdateUserAsync(userId, UserDataBuilder.CreateValidUpdateDto());
+        var updateResponse = await _userApi.UpdateUserAsync(userId, UserDataBuilder.CreateValidUpdateDto());
         Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
 
-        var deleteResponse = await ApiClient.DeleteUserAsync(userId);
+        var deleteResponse = await _userApi.DeleteUserAsync(userId);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
-        var loginResponse = await ApiClient.LoginAsync(new() { Email = newUser.Email, Password = newUser.Password });
+        var loginResponse = await _userApi.LoginAsync(new() { Email = newUser.Email, Password = newUser.Password });
         Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Login_WithValidCredentials_ReturnsTokens()
+    {
+        var user = UserDataBuilder.CreateValidRegistrationDto();
+        await _userApi.RegisterUserAsync(user);
+
+        var loginData = new UserLoginDto { Email = user.Email, Password = user.Password };
+        var response = await _userApi.LoginAsync(loginData);
+        
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var loginResult = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var accessToken = loginResult.GetProperty("data").GetProperty("accessToken").GetString();
+        var refreshToken = loginResult.GetProperty("data").GetProperty("refreshToken").GetString();
+        
+        Assert.False(string.IsNullOrEmpty(accessToken));
+        Assert.False(string.IsNullOrEmpty(refreshToken));
+    }
+
+    [Fact]
+    public async Task RefreshToken_WithValidData_ReturnsNewTokens()
+    {
+        var user = UserDataBuilder.CreateValidRegistrationDto();
+        await _userApi.RegisterUserAsync(user);
+        
+        var loginData = new UserLoginDto { Email = user.Email, Password = user.Password };
+        var loginResponse = await _userApi.LoginAsync(loginData);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+        
+        var oldAccessToken = loginResult.GetProperty("data").GetProperty("accessToken").GetString();
+        var oldRefreshToken = loginResult.GetProperty("data").GetProperty("refreshToken").GetString();
+
+        var refreshRequest = new RefreshTokenRequestDto
+        {
+            AccessToken = oldAccessToken!,
+            RefreshToken = oldRefreshToken!
+        };
+        
+        var refreshResponse = await _userApi.RefreshTokenAsync(refreshRequest);
+        Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
+
+        var refreshResult = await refreshResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var newAccessToken = refreshResult.GetProperty("data").GetProperty("accessToken").GetString();
+        var newRefreshToken = refreshResult.GetProperty("data").GetProperty("refreshToken").GetString();
+
+        Assert.False(string.IsNullOrEmpty(newAccessToken));
+        Assert.False(string.IsNullOrEmpty(newRefreshToken));
+        Assert.NotEqual(oldAccessToken, newAccessToken);
+        Assert.NotEqual(oldRefreshToken, newRefreshToken);
+    }
+
+    [Fact]
+    public async Task Login_WithWrongPassword_ReturnsUnauthorized()
+    {
+        var user = UserDataBuilder.CreateValidRegistrationDto();
+        await _userApi.RegisterUserAsync(user);
+
+        var loginData = new UserLoginDto { Email = user.Email, Password = "WrongPassword123!" };
+        var response = await _userApi.LoginAsync(loginData);
+        
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Login_WithNonExistentEmail_ReturnsUnauthorized()
+    {
+        var loginData = new UserLoginDto { Email = "ghost@email.com", Password = "pAssword123!" };
+        var response = await _userApi.LoginAsync(loginData);
+        
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
     public async Task GetPublicProfile_WithValidUsername()
     {
         var user = UserDataBuilder.CreateValidRegistrationDto();
-        await ApiClient.RegisterUserAsync(user);
+        await _userApi.RegisterUserAsync(user);
 
-        var response = await ApiClient.GetPublicProfileAsync(user.UserName);
+        var response = await _userApi.GetPublicProfileAsync(user.UserName);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var profileData = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -53,7 +130,7 @@ public class UserTests : IntegrationTestBase
         var weakUser = UserDataBuilder.CreateValidRegistrationDto();
         weakUser.Password = "weak";
 
-        var response = await ApiClient.RegisterUserAsync(weakUser);
+        var response = await _userApi.RegisterUserAsync(weakUser);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -62,12 +139,12 @@ public class UserTests : IntegrationTestBase
     public async Task CreateUser_WithDuplicateEmail()
     {
         var firstUser = UserDataBuilder.CreateValidRegistrationDto();
-        await ApiClient.RegisterUserAsync(firstUser);
+        await _userApi.RegisterUserAsync(firstUser);
 
         var duplicateEmailUser = UserDataBuilder.CreateValidRegistrationDto();
         duplicateEmailUser.Email = firstUser.Email; 
 
-        var response = await ApiClient.RegisterUserAsync(duplicateEmailUser);
+        var response = await _userApi.RegisterUserAsync(duplicateEmailUser);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -78,7 +155,7 @@ public class UserTests : IntegrationTestBase
         var futureUser = UserDataBuilder.CreateValidRegistrationDto();
         futureUser.BirthDate = DateTime.UtcNow.AddYears(1);
 
-        var response = await ApiClient.RegisterUserAsync(futureUser);
+        var response = await _userApi.RegisterUserAsync(futureUser);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -87,13 +164,13 @@ public class UserTests : IntegrationTestBase
     public async Task UpdateUser_UpdateAnotherUser()
     {
         var userA = UserDataBuilder.CreateValidRegistrationDto();
-        await ApiClient.RegisterUserAsync(userA);
+        await _userApi.RegisterUserAsync(userA);
         
-        var token = await ApiClient.LoginAndGetTokenAsync(userA.Email, userA.Password);
-        ApiClient.SetToken(token);
+        var token = await _userApi.LoginAndGetTokenAsync(userA.Email, userA.Password);
+        SetToken(token);
 
         int anotherUserId = 99999;
-        var response = await ApiClient.UpdateUserAsync(anotherUserId, UserDataBuilder.CreateValidUpdateDto());
+        var response = await _userApi.UpdateUserAsync(anotherUserId, UserDataBuilder.CreateValidUpdateDto());
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -102,13 +179,13 @@ public class UserTests : IntegrationTestBase
     public async Task DeleteUser_DeleteAnotherUser()
     {
         var userA = UserDataBuilder.CreateValidRegistrationDto();
-        await ApiClient.RegisterUserAsync(userA);
+        await _userApi.RegisterUserAsync(userA);
         
-        var token = await ApiClient.LoginAndGetTokenAsync(userA.Email, userA.Password);
-        ApiClient.SetToken(token);
+        var token = await _userApi.LoginAndGetTokenAsync(userA.Email, userA.Password);
+        SetToken(token);
 
         int anotherUserId = 99999;
-        var response = await ApiClient.DeleteUserAsync(anotherUserId);
+        var response = await _userApi.DeleteUserAsync(anotherUserId);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -116,11 +193,11 @@ public class UserTests : IntegrationTestBase
     [Fact]
     public async Task AccessProtectedRoutes_WithoutToken()
     {
-        ApiClient.ClearToken();
+        ClearToken();
 
-        var getMeResponse = await ApiClient.GetCurrentUserAsync();
-        var updateResponse = await ApiClient.UpdateUserAsync(1, UserDataBuilder.CreateValidUpdateDto());
-        var deleteResponse = await ApiClient.DeleteUserAsync(1);
+        var getMeResponse = await _userApi.GetCurrentUserAsync();
+        var updateResponse = await _userApi.UpdateUserAsync(1, UserDataBuilder.CreateValidUpdateDto());
+        var deleteResponse = await _userApi.DeleteUserAsync(1);
 
         Assert.Equal(HttpStatusCode.Unauthorized, getMeResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, updateResponse.StatusCode);

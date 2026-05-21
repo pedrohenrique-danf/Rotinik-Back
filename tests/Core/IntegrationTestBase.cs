@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Xunit;
 
 namespace Rotinik.Tests.Core;
@@ -5,11 +6,20 @@ namespace Rotinik.Tests.Core;
 [Collection("Api Tests")]
 public abstract class IntegrationTestBase
 {
-    protected readonly RotinikApiClient ApiClient;
+    protected readonly HttpClient Client;
 
     protected IntegrationTestBase(CustomApiFactory factory)
     {
-        var httpClient = factory.CreateClient();
-        ApiClient = new RotinikApiClient(httpClient);
+        Client = factory.CreateClient();
+    }
+
+    protected void SetToken(string token)
+    {
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+    
+    protected void ClearToken()
+    {
+        Client.DefaultRequestHeaders.Authorization = null;
     }
 }

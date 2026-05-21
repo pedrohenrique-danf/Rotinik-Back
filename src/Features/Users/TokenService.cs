@@ -4,10 +4,9 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
-using Rotinik.Features.Users;
 using Rotinik.Core.Settings;
 
-namespace Rotinik.Features.Auth;
+namespace Rotinik.Features.Users;
 
 public class TokenService
 {
@@ -41,6 +40,7 @@ public class TokenService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
     public string GenerateRefreshToken()
     {
         var randomNumber = new byte[64];

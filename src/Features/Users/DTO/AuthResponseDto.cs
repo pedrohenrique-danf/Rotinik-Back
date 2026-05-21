@@ -1,4 +1,4 @@
-namespace Rotinik.Features.Auth;
+namespace Rotinik.Features.Users.DTOs;
 
 public class AuthResponseDto
 {

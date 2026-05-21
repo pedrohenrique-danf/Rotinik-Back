@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
 using Rotinik.Core.Data;
@@ -9,28 +8,35 @@ namespace Rotinik.Features.Routines;
 public class RoutineService
 {
     private readonly AppDbContext _context;
-    private readonly IMapper _mapper;
 
-    public RoutineService(AppDbContext context, IMapper mapper)
+    public RoutineService(AppDbContext context)
     {
         _context = context;
-        _mapper = mapper;
     }
 
     public async Task<RoutineResponseDto> CreateRoutineAsync(int currentUserId, RoutineCreateDto dto)
-{
-    var user = await _context.Users.FindAsync(currentUserId);
-    if (user == null)
-        throw new NotFoundException("User not found.");
+    {
+        var user = await _context.Users.FindAsync(currentUserId);
+        if (user == null)
+            throw new NotFoundException("User not found.");
 
-    var routine = _mapper.Map<Routine>(dto);
-    routine.IdUser = user;
+        var routine = new Routine
+        {
+            Title = dto.Title,
+            Category = dto.Category,
+            IdUser = user
+        };
 
-    await _context.Routines.AddAsync(routine);
-    await _context.SaveChangesAsync();
-    
-    return _mapper.Map<RoutineResponseDto>(routine);
-}
+        await _context.Routines.AddAsync(routine);
+        await _context.SaveChangesAsync();
+        
+        return new RoutineResponseDto
+        {
+            Id = routine.Id,
+            Title = routine.Title,
+            Category = routine.Category
+        };
+    }
 
     public async Task UpdateRoutineAsync(int id, int currentUserId, RoutineUpdateDto dto)
     {

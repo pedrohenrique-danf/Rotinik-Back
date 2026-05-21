@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Rotinik.Core.Data;
 using Rotinik.Core.Settings;
-using Rotinik.Features.Auth;
 using Rotinik.Features.Payments;
 using Rotinik.Features.Routines;
 using Rotinik.Features.Users;
@@ -56,23 +55,20 @@ public static class ServiceCollectionExtensions
     }
 
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
-    {
-        services.AddControllers();
-        
-        services.AddFluentValidationAutoValidation();
-        services.AddValidatorsFromAssemblyContaining<Program>();
+{
+    services.AddControllers();
+    
+    services.AddFluentValidationAutoValidation();
+    services.AddValidatorsFromAssemblyContaining<Program>();
 
-        services.AddAutoMapper(config => config.AddMaps(typeof(Program).Assembly));
+    services.AddScoped<TokenService>();
+    services.AddScoped<UserService>();
+    
+    services.AddScoped<RoutineService>();
+    services.AddScoped<PaymentSimulationService>();
 
-        services.AddScoped<TokenService>();
-        services.AddScoped<UserService>();
-        services.AddScoped<AuthService>();
-        
-        services.AddScoped<RoutineService>();
-        services.AddScoped<PaymentSimulationService>();
-
-        return services;
-    }
+    return services;
+}
 
     public static IServiceCollection AddCorsConfiguration(this IServiceCollection services)
     {
