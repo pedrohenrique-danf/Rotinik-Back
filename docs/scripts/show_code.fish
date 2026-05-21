@@ -23,8 +23,7 @@ function print_file_content -a file
     
     printf "```%s\n" "$lang"
     cat "$file"
-    printf "\n
-```\n\n"
+    printf "\n```\n\n"
 end
 
 function print_all_code -a target_dir

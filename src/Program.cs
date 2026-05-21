@@ -1,4 +1,4 @@
-using Rotinik.Extensions;
+using Rotinik.Core.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
