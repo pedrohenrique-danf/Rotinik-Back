@@ -1,3 +1,4 @@
+// src/Extensions/ServiceCollectionExtensions.cs
 using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Rotinik.Data;
+using Rotinik.Data.Repositories;
 using Rotinik.Services;
 using Rotinik.Settings;
 
@@ -43,11 +45,7 @@ public static class ServiceCollectionExtensions
                 };
             });
 
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy("PremiumOnly", policy => 
-                policy.RequireClaim("isPremium", "True"));
-        });
+        services.AddAuthorization();
         
         return services;
     }
@@ -61,11 +59,12 @@ public static class ServiceCollectionExtensions
 
         services.AddAutoMapper(config => config.AddMaps(typeof(Program).Assembly));
 
-        services.AddSingleton<PasswordHasher>();
-        services.AddScoped<TokenService>();
-        services.AddScoped<UserService>();
-        services.AddScoped<AuthService>();
-        services.AddScoped<PaymentSimulationService>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IUserCommandService, UserCommandService>();
+        services.AddScoped<IUserQueryService, UserQueryService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
         return services;
     }

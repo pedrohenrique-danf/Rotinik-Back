@@ -9,7 +9,7 @@ using Rotinik.Settings;
 
 namespace Rotinik.Services;
 
-public class TokenService
+public class TokenService : ITokenService
 {
     private readonly JwtSettings _jwtSettings;
 
@@ -28,8 +28,7 @@ public class TokenService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim("name", user.Name),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("isPremium", user.isPremium.ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         var token = new JwtSecurityToken(

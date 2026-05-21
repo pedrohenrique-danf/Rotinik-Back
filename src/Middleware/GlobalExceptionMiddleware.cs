@@ -45,15 +45,11 @@ public class GlobalExceptionMiddleware
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
         }
 
-        var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        var message = exception is BaseAppException 
+            ? exception.Message 
+            : "An unexpected internal server error occurred.";
 
-        var message = exception is BaseAppException
-            ? exception.Message
-            : isDevelopment
-                ? $"{exception.Message} | {exception.StackTrace}"
-                : "An unexpected internal server error occurred.";
-
-        var response = new { message };
+        var response = new { message = message };
         var payload = JsonSerializer.Serialize(response);
 
         return context.Response.WriteAsync(payload);
