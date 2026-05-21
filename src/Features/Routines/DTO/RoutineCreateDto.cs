@@ -1,4 +1,4 @@
-namespace Rotinik.Features.Routines;
+namespace Rotinik.Features.Routines.DTO;
 
 public class RoutineCreateDto
 {

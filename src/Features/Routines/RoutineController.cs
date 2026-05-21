@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Rotinik.Core.Extensions;
+using Rotinik.Features.Routines.DTO;
 
 namespace Rotinik.Features.Routines;
 
@@ -23,9 +25,11 @@ public class RoutineController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateRoutine(RoutineCreateDto dto)
     {
-        var currentUserId = GetCurrentUserId();
-        await _routineService.CreateRoutineAsync(currentUserId, dto);
-        return StatusCode(201, new { message = "Routine created." });
+        var currentUserId = User.GetCurrentUserId();
+        
+        var result = await _routineService.CreateRoutineAsync(currentUserId, dto);
+        
+        return StatusCode(201, new { data = result, message = "Routine created." });
     }
 
     [HttpPut("{id}")]
@@ -36,7 +40,7 @@ public class RoutineController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateRoutine(int id, RoutineUpdateDto dto)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = User.GetCurrentUserId();
         await _routineService.UpdateRoutineAsync(id, currentUserId, dto);
         return NoContent();
     }
@@ -48,15 +52,9 @@ public class RoutineController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteRoutine(int id)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = User.GetCurrentUserId();
         await _routineService.DeleteRoutineAsync(id, currentUserId);
         return NoContent();
     }
 
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        int.TryParse(userIdClaim, out int userId);
-        return userId;
-    }
 }

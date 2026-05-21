@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Rotinik.Core.Extensions;
+using Rotinik.Features.Payments.DTOs;
 
 namespace Rotinik.Features.Payments;
 
@@ -9,40 +10,33 @@ namespace Rotinik.Features.Payments;
 public class PaymentController : ControllerBase
 {
     private readonly PaymentSimulationService _paymentService;
-    private readonly IServiceScopeFactory _scopeFactory;
 
-    public PaymentController(
-        PaymentSimulationService paymentService, 
-        IServiceScopeFactory scopeFactory)
+    public PaymentController(PaymentSimulationService paymentService)
     {
         _paymentService = paymentService;
-        _scopeFactory = scopeFactory;
     }
 
     [Authorize]
     [HttpPost("checkout")]
-    public async Task<IActionResult> Checkout()
+    public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto dto)
     {
-        var userId = GetCurrentUserId();
+        var userId = User.GetCurrentUserId();
         
-        var transactionId = await _paymentService.GenerateCheckoutAsync(userId, 29.90m);
-
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(10000); 
-
-            using var scope = _scopeFactory.CreateScope();
-            var bgPaymentService = scope.ServiceProvider.GetRequiredService<PaymentSimulationService>();
-            
-            await bgPaymentService.ProcessPaymentSuccessAsync(transactionId);
-        });
+        var transactionId = await _paymentService.GenerateCheckoutAsync(userId, dto.Amount);
 
         return Ok(new 
         { 
             transactionId = transactionId, 
             status = "Pending",
-            message = "Pagamento aguardando confirmação. (O gateway virtual aprovará em 10 segundos)." 
+            message = "Pagamento criado. Para simular a aprovação, faça um POST em /api/payments/webhook-mock/{transactionId}" 
         });
+    }
+
+    [HttpPost("webhook-mock/{transactionId}")]
+    public async Task<IActionResult> ApprovePaymentMock(string transactionId)
+    {
+        await _paymentService.ProcessPaymentSuccessAsync(transactionId);
+        return Ok(new { message = "Webhook simulado com sucesso. Pagamento aprovado!" });
     }
 
     [Authorize]
@@ -57,12 +51,5 @@ public class PaymentController : ControllerBase
             transactionId = payment.TransactionId, 
             status = payment.Status.ToString() 
         });
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        int.TryParse(userIdClaim, out int userId);
-        return userId;
     }
 }

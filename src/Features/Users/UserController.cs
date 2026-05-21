@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rotinik.Features.Users.DTOs;
 using System.Security.Claims;
+using Rotinik.Core.Extensions;
 
 namespace Rotinik.Features.Users;
 
@@ -42,7 +43,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateUser(int id, UserUpdateDto dto)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = User.GetCurrentUserId();
         await _userService.UpdateUserAsync(id, currentUserId, dto);
         return NoContent();  
     }
@@ -54,7 +55,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteUser(int id)
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = User.GetCurrentUserId();
         await _userService.DeleteUserAsync(id, currentUserId);
         return NoContent();
     }
@@ -66,19 +67,12 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetCurrentUser()
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = User.GetCurrentUserId();
         if (currentUserId == 0)
             return Unauthorized(new { message = "Invalid token payload." });
 
         var response = await _userService.GetCurrentUserAsync(currentUserId);
         return Ok(response);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        int.TryParse(userIdClaim, out int userId);
-        return userId;
     }
 
     [Authorize(Policy = "PremiumOnly")]
@@ -101,7 +95,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UpgradeToPremium()
     {
-        var currentUserId = GetCurrentUserId();
+        var currentUserId = User.GetCurrentUserId();
         await _userService.ActivatePremiumAsync(currentUserId);
         return Ok(new { message = "Parabéns! Sua conta agora é Premium." });
     }

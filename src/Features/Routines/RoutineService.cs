@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
 using Rotinik.Core.Data;
+using Rotinik.Features.Routines.DTO;
 
 namespace Rotinik.Features.Routines;
 
@@ -16,18 +17,20 @@ public class RoutineService
         _mapper = mapper;
     }
 
-    public async Task CreateRoutineAsync(int currentUserId, RoutineCreateDto dto)
-    {
-        var user = await _context.Users.FindAsync(currentUserId);
-        if (user == null)
-            throw new NotFoundException("User not found.");
+    public async Task<RoutineResponseDto> CreateRoutineAsync(int currentUserId, RoutineCreateDto dto)
+{
+    var user = await _context.Users.FindAsync(currentUserId);
+    if (user == null)
+        throw new NotFoundException("User not found.");
 
-        var routine = _mapper.Map<Routine>(dto);
-        routine.IdUser = user;
+    var routine = _mapper.Map<Routine>(dto);
+    routine.IdUser = user;
 
-        await _context.Routines.AddAsync(routine);
-        await _context.SaveChangesAsync();
-    }
+    await _context.Routines.AddAsync(routine);
+    await _context.SaveChangesAsync();
+    
+    return _mapper.Map<RoutineResponseDto>(routine);
+}
 
     public async Task UpdateRoutineAsync(int id, int currentUserId, RoutineUpdateDto dto)
     {
