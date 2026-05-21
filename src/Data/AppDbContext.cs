@@ -10,6 +10,8 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<Payment> Payments { get; set; }
+    public DbSet<Routine> Routines { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

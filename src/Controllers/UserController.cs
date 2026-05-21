@@ -10,13 +10,11 @@ namespace Rotinik.Controllers;
 [ApiController]
 public class UserController : ControllerBase
 {
-    private readonly IUserCommandService _commandService;
-    private readonly IUserQueryService _queryService;
+    private readonly UserService _userService;
 
-    public UserController(IUserCommandService commandService, IUserQueryService queryService)
+    public UserController(UserService userService)
     {
-        _commandService = commandService;
-        _queryService = queryService;
+        _userService = userService;
     }
 
     [HttpPost]
@@ -25,7 +23,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateUser(UserRegistrationDto dto)
     {
-        await _commandService.CreateUserAsync(dto);
+        await _userService.CreateUserAsync(dto);
         return StatusCode(201, new { message = "User created" });
     }
 
@@ -34,7 +32,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPublicProfile(string username)
     {
-        var profile = await _queryService.GetPublicProfileAsync(username);
+        var profile = await _userService.GetPublicProfileAsync(username);
         return Ok(profile);
     }
 
@@ -46,7 +44,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> UpdateUser(int id, UserUpdateDto dto)
     {
         var currentUserId = GetCurrentUserId();
-        await _commandService.UpdateUserAsync(id, currentUserId, dto);
+        await _userService.UpdateUserAsync(id, currentUserId, dto);
         return NoContent();  
     }
 
@@ -58,7 +56,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> DeleteUser(int id)
     {
         var currentUserId = GetCurrentUserId();
-        await _commandService.DeleteUserAsync(id, currentUserId);
+        await _userService.DeleteUserAsync(id, currentUserId);
         return NoContent();
     }
 
@@ -73,7 +71,7 @@ public class UserController : ControllerBase
         if (currentUserId == 0)
             return Unauthorized(new { message = "Invalid token payload." });
 
-        var response = await _queryService.GetCurrentUserAsync(currentUserId);
+        var response = await _userService.GetCurrentUserAsync(currentUserId);
         return Ok(response);
     }
 
@@ -82,5 +80,30 @@ public class UserController : ControllerBase
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         int.TryParse(userIdClaim, out int userId);
         return userId;
+    }
+
+    [Authorize(Policy = "PremiumOnly")]
+    [HttpGet("conteudo-vip")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public IActionResult GetPremiumContent()
+    {
+        return Ok(new 
+        { 
+            message = "Bem-vindo à área VIP! Este conteúdo é exclusivo para assinantes Premium." 
+        });
+    }
+
+    [Authorize]
+    [HttpPost("premium")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpgradeToPremium()
+    {
+        var currentUserId = GetCurrentUserId();
+        await _userService.ActivatePremiumAsync(currentUserId);
+        return Ok(new { message = "Parabéns! Sua conta agora é Premium." });
     }
 }

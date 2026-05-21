@@ -1,28 +1,27 @@
+using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
-using Rotinik.Data.Repositories;
+using Rotinik.Data;
 using Rotinik.DTOs.User;
 using System.Security.Claims;
 
 namespace Rotinik.Services;
 
-public class AuthService : IAuthService
+public class AuthService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly ITokenService _tokenService;
-    private readonly IPasswordHasher _passwordHasher;
+    private readonly AppDbContext _context;
+    private readonly TokenService _tokenService;
 
-    public AuthService(IUserRepository userRepository, ITokenService tokenService, IPasswordHasher passwordHasher)
+    public AuthService(AppDbContext context, TokenService tokenService)
     {
-        _userRepository = userRepository;
+        _context = context;
         _tokenService = tokenService;
-        _passwordHasher = passwordHasher;
     }
 
     public async Task<AuthResponseDto> LoginAsync(UserLoginDto dto)
     {
-        var user = await _userRepository.GetByEmailAsync(dto.Email);
+        var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == dto.Email);
         
-        if (user == null || !_passwordHasher.VerifyPassword(dto.Password, user.Password))
+        if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
             throw new UnauthorizedException("Invalid email or password.");
 
         var accessToken = _tokenService.GenerateJwtToken(user);
@@ -30,7 +29,7 @@ public class AuthService : IAuthService
 
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-        await _userRepository.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
         return new AuthResponseDto { AccessToken = accessToken, RefreshToken = refreshToken };
     }
@@ -43,7 +42,7 @@ public class AuthService : IAuthService
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             throw new UnauthorizedException("Invalid token payload.");
 
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _context.Users.FindAsync(userId);
 
         if (user == null || user.RefreshToken != dto.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
             throw new UnauthorizedException("Invalid refresh token.");
@@ -52,7 +51,7 @@ public class AuthService : IAuthService
         var newRefreshToken = _tokenService.GenerateRefreshToken();
 
         user.RefreshToken = newRefreshToken;
-        await _userRepository.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
         return new AuthResponseDto { AccessToken = newAccessToken, RefreshToken = newRefreshToken };
     }
