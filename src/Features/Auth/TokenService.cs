@@ -29,7 +29,7 @@ public class TokenService
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim("name", user.Name),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("isPremium", user.isPremium.ToString()) // <- ESSA LINHA É NOVA
+            new Claim("isPremium", user.isPremium.ToString())
         };
 
         var token = new JwtSecurityToken(

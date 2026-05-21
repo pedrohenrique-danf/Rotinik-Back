@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace Rotinik.Tests.Setup;
+namespace Rotinik.Tests.Core;
 
 [CollectionDefinition("Api Tests")]
 public class SharedTestCollection : ICollectionFixture<CustomApiFactory>

@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
-using Rotinik.Data;
+using Rotinik.Core.Data;
 using Xunit;
 
-namespace Rotinik.Tests.Setup;
+namespace Rotinik.Tests.Core;
 
 public class CustomApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {

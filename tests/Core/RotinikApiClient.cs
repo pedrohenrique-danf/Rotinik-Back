@@ -1,9 +1,9 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Rotinik.DTOs.User;
+using Rotinik.Features.Users.DTOs;
 
-namespace Rotinik.Tests.Clients;
+namespace Rotinik.Tests.Core;
 
 public class RotinikApiClient
 {

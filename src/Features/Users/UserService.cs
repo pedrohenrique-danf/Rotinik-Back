@@ -27,7 +27,6 @@ public class UserService
 
         var user = _mapper.Map<User>(dto);
         
-        // Uso direto da biblioteca, sem necessidade de classe extra
         user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password); 
 
         await _context.Users.AddAsync(user);

@@ -1,8 +1,6 @@
-using Rotinik.Tests.Clients;
-using Rotinik.Tests.Setup;
 using Xunit;
 
-namespace Rotinik.Tests.Base;
+namespace Rotinik.Tests.Core;
 
 [Collection("Api Tests")]
 public abstract class IntegrationTestBase

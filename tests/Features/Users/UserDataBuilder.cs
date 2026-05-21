@@ -1,6 +1,6 @@
-using Rotinik.DTOs.User;
+using Rotinik.Features.Users.DTOs;
 
-namespace Rotinik.Tests.Builders;
+namespace Rotinik.Tests.Features.Users;
 
 public static class UserDataBuilder
 {

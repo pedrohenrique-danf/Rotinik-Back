@@ -1,13 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Rotinik.DTOs.User;
-using Rotinik.Tests.Base;
-using Rotinik.Tests.Builders;
-using Rotinik.Tests.Setup;
+using Rotinik.Features.Users.DTOs;
+using Rotinik.Tests.Core;
+using Rotinik.Tests.Features.Users;
 using Xunit;
 
-namespace Rotinik.Tests.Tests;
+namespace Rotinik.Tests.Features.Auth;
 
 public class AuthTests : IntegrationTestBase
 {
