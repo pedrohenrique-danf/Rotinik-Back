@@ -19,16 +19,29 @@ public class UserService
 
     public async Task<AuthResponseDto> LoginAsync(UserLoginDto dto)
     {
-        var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == dto.Email);
+        var user = await _context.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.Email == dto.Email);
         
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
             throw new UnauthorizedException("Invalid email or password.");
 
         var accessToken = _tokenService.GenerateJwtToken(user);
         var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshTokenHash = _tokenService.HashToken(refreshToken);
 
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        var expiredTokens = user.RefreshTokens.Where(rt => rt.ExpiryTime <= DateTime.UtcNow).ToList();
+        foreach (var token in expiredTokens)
+        {
+            user.RefreshTokens.Remove(token);
+        }
+
+        user.RefreshTokens.Add(new UserRefreshToken
+        {
+            TokenHash = refreshTokenHash,
+            ExpiryTime = DateTime.UtcNow.AddDays(7)
+        });
+
         await _context.SaveChangesAsync();
 
         return new AuthResponseDto { AccessToken = accessToken, RefreshToken = refreshToken };
@@ -42,15 +55,33 @@ public class UserService
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             throw new UnauthorizedException("Invalid token payload.");
 
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _context.Users
+            .Include(u => u.RefreshTokens)
+            .SingleOrDefaultAsync(u => u.Id == userId);
 
-        if (user == null || user.RefreshToken != dto.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+        if (user == null)
+            throw new UnauthorizedException("Invalid user.");
+
+        var incomingTokenHash = _tokenService.HashToken(dto.RefreshToken);
+        
+        var activeSession = user.RefreshTokens.FirstOrDefault(rt => 
+            rt.TokenHash == incomingTokenHash && rt.ExpiryTime > DateTime.UtcNow);
+
+        if (activeSession == null)
             throw new UnauthorizedException("Invalid refresh token.");
+
+        user.RefreshTokens.Remove(activeSession);
 
         var newAccessToken = _tokenService.GenerateJwtToken(user);
         var newRefreshToken = _tokenService.GenerateRefreshToken();
+        var newRefreshTokenHash = _tokenService.HashToken(newRefreshToken);
 
-        user.RefreshToken = newRefreshToken;
+        user.RefreshTokens.Add(new UserRefreshToken
+        {
+            TokenHash = newRefreshTokenHash,
+            ExpiryTime = DateTime.UtcNow.AddDays(7)
+        });
+
         await _context.SaveChangesAsync();
 
         return new AuthResponseDto { AccessToken = newAccessToken, RefreshToken = newRefreshToken };
@@ -63,12 +94,16 @@ public class UserService
 
         if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             throw new ConflictException("Email in use.");
+        
+        if (await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber))
+            throw new ConflictException("Phone number in use.");
 
         var user = new User
         {
             Name = dto.Name,
             UserName = dto.UserName,
             Email = dto.Email,
+            PhoneNumber = dto.PhoneNumber,
             BirthDate = dto.BirthDate.ToUniversalTime(),
             Password = BCrypt.Net.BCrypt.HashPassword(dto.Password)
         };
@@ -115,9 +150,13 @@ public class UserService
         if (user == null) 
             throw new NotFoundException("User not found.");
 
+        if (user.PhoneNumber != dto.PhoneNumber && await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber))
+            throw new ConflictException("Phone number in use.");
+
         user.Name = dto.Name;
         user.BirthDate = dto.BirthDate.ToUniversalTime();
-
+        user.PhoneNumber = dto.PhoneNumber;
+        
         if (!string.IsNullOrEmpty(dto.Password))
         {
             user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);

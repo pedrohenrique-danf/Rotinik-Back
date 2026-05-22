@@ -24,7 +24,7 @@ sudo apt install -y postgresql postgresql-contrib
 sudo apt install -y docker.io
 
 # DBeaver
-wget [https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb](https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb)
+wget "https://dbeaver.io/files/dbeaver-ce_latest_amd64.deb"
 sudo apt install ./dbeaver-ce_latest_amd64.deb
 rm dbeaver-ce_latest_amd64.deb
 
@@ -94,4 +94,4 @@ dotnet ef migrations add new_models --project src/Rotinik.csproj
 dotnet ef database update --project src/Rotinik.csproj
 ```
 
-> Saia e entre no usuário, Log Out -> Log in, para o Docker funcionar (ou reinicie o computador).
+> Reinicie o computador para o Docker funcionar.

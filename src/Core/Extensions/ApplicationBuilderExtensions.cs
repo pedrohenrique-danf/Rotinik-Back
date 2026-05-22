@@ -1,7 +1,6 @@
 using Scalar.AspNetCore;
 using Rotinik.Core.Middleware;
 using Rotinik.Core.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Rotinik.Core.Extensions;
 
@@ -28,6 +27,8 @@ public static class ApplicationBuilderExtensions
         }
 
         app.UseMiddleware<GlobalExceptionMiddleware>();
+
+        app.UseRateLimiter();
 
         app.UseCors("AllowAll");
         app.UseAuthentication();

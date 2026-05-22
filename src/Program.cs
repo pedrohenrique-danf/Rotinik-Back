@@ -6,6 +6,7 @@ builder.Services
     .AddDatabaseConfiguration(builder.Configuration)
     .AddJwtAuthentication(builder.Configuration)
     .AddCorsConfiguration()
+    .AddRateLimitingConfiguration()
     .AddApplicationServices()
     .AddOpenApi();
 

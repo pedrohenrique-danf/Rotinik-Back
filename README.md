@@ -22,3 +22,7 @@ Uma API RESTful construída em .NET para funcionar como o motor do [Rotinik](htt
 - [Guia de Instalação](docs/windows/installation-and-configuration.md) - vazio
 - [Guia de Inicialização](docs/windows/project-startup.md) - vazio
 - [Scripts de Apoio - PowerShell](docs/windows/powershell-commands.md)
+
+### To-do
+
+- Adequar o servidor para produção ([checklist](docs/production-checklist.md))

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Rotinik.Features.Users.DTOs;
 using Rotinik.Core.Extensions;
 
@@ -9,6 +10,11 @@ namespace Rotinik.Features.Users;
 [ApiController]
 public class UserController : ControllerBase
 {
+    private const string AuthTag = "User (Autenticação)";
+    private const string AccountTag = "User (Gerenciamento de Conta)";
+    private const string ProfileTag = "User (Perfil Público)";
+    private const string PremiumTag = "User (Conteúdo Premium)";
+
     private readonly UserService _userService;
 
     public UserController(UserService userService)
@@ -17,8 +23,11 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("login")]
+    [Tags(AuthTag)]
+    [EnableRateLimiting("LoginPolicy")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Login(UserLoginDto dto)
     {
         var response = await _userService.LoginAsync(dto);
@@ -26,6 +35,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("refresh-token")]
+    [Tags(AuthTag)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
@@ -35,6 +45,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
+    [Tags(AccountTag)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -44,17 +55,9 @@ public class UserController : ControllerBase
         return StatusCode(201, new { message = "User created" });
     }
 
-    [HttpGet("profile/{username}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetPublicProfile(string username)
-    {
-        var profile = await _userService.GetPublicProfileAsync(username);
-        return Ok(profile);
-    }
-
     [Authorize]
     [HttpPut("{id}")]
+    [Tags(AccountTag)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -67,6 +70,7 @@ public class UserController : ControllerBase
 
     [Authorize]
     [HttpDelete("{id}")]
+    [Tags(AccountTag)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -79,6 +83,7 @@ public class UserController : ControllerBase
 
     [Authorize]
     [HttpGet("me")]
+    [Tags(AccountTag)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -92,8 +97,19 @@ public class UserController : ControllerBase
         return Ok(response);
     }
 
-    [Authorize(Policy = "PremiumOnly")]
+    [HttpGet("profile/{username}")]
+    [Tags(ProfileTag)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPublicProfile(string username)
+    {
+        var profile = await _userService.GetPublicProfileAsync(username);
+        return Ok(profile);
+    }
+
+    [Authorize(Policy = "isPremium")] 
     [HttpGet("conteudo-vip")]
+    [Tags(PremiumTag)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public IActionResult GetPremiumContent()

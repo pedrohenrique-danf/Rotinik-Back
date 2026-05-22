@@ -1,7 +1,17 @@
-#!/usr/bin/env fish
+#!/usr/bin/fish
 
 function get_markdown_lang -a ext
     switch "$ext"
+        case ts
+            echo "typescript"
+        case js
+            echo "javascript"
+        case html
+            echo "html"
+        case css
+            echo "css"
+        case scss
+            echo "scss"
         case cs
             echo "csharp"
         case json
@@ -18,36 +28,46 @@ end
 function print_file_content -a file
     printf "File: %s\n" "$file"
     
-    set ext (string split -r -m1 . "$file")[-1]
+    set filename (basename "$file")
+    set ext ""
+    
+    if string match -q "*.*" "$filename"
+        set ext (string split -r -m1 . "$filename")[-1]
+    end
+    
     set lang (get_markdown_lang "$ext")
     
     printf "```%s\n" "$lang"
     cat "$file"
-    printf "\n```\n\n"
+    printf "\n
+```\n\n"
 end
 
-function print_all_code -a target_dir
-    set target_files (string match -v -r '/(Migrations|artifacts|obj|bin|docs|\.git)/' $target_dir/**/*)
+function process_target -a target
+    if test -f "$target"
+        print_file_content "$target"
+        
+    else if test -d "$target"
+        set target_files (string match -v -r '/(Migrations|artifacts|obj|bin|docs|\.git|node_modules)/' $target/**/*)
 
-    for file in $target_files
-        if test -f "$file"
-            print_file_content "$file"
+        for file in $target_files
+            if test -f "$file"
+                print_file_content "$file"
+            end
         end
+    else
+        echo "Error: The path '$target' does not exist or is invalid." >&2
     end
 end
 
 function main
-    set base_dir "."
-    if test (count $argv) -gt 0
-        set base_dir $argv[1]
+    if test (count $argv) -eq 0
+        process_target "."
+    else
+        for target in $argv
+            process_target "$target"
+        end
     end
-
-    if not test -d "$base_dir"
-        echo "Error: The directory '$base_dir' does not exist."
-        exit 1
-    end
-
-    print_all_code "$base_dir"
 end
 
 main $argv

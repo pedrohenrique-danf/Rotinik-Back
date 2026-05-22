@@ -8,7 +8,7 @@ public class User
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
     public bool isPremium { get; set; } = false;
-    public string? RefreshToken { get; set; }
-    public DateTime? RefreshTokenExpiryTime { get; set; }
+    public ICollection<UserRefreshToken> RefreshTokens { get; set; } = new List<UserRefreshToken>();
 }

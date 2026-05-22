@@ -18,6 +18,10 @@ public class UserRegistrationDtoValidator : AbstractValidator<UserRegistrationDt
         RuleFor(user => user.Email)
             .MustBeValidEmail();
 
+        RuleFor(user => user.PhoneNumber)
+            .NotEmpty().WithMessage("Phone number is required.")
+            .MaximumLength(20).WithMessage("Phone number cannot exceed 20 characters.");
+
         RuleFor(user => user.BirthDate)
             .MustBeValidBirthDate();
 

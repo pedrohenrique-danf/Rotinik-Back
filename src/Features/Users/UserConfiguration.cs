@@ -32,7 +32,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.isPremium)
             .IsRequired()
             .HasDefaultValue(false);
-            
+
+        builder.Property(x => x.PhoneNumber)
+            .IsRequired()
+            .HasMaxLength(20);
+
+        builder.HasIndex(x => x.PhoneNumber).IsUnique();
         builder.HasIndex(x => x.Email).IsUnique();
         builder.HasIndex(x => x.UserName).IsUnique();
     }
