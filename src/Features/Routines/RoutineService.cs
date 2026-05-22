@@ -68,4 +68,17 @@ public class RoutineService
         _context.Routines.Remove(routine);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<RoutineResponseDto>> GetUserRoutinesAsync(int currentUserId)
+    {
+        return await _context.Routines
+            .Where(r => r.IdUser.Id == currentUserId)
+            .Select(r => new RoutineResponseDto
+            {
+                Id = r.Id,
+                Title = r.Title,
+                Category = r.Category
+            })
+            .ToListAsync();
+    }
 }

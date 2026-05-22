@@ -57,4 +57,14 @@ public class RoutineController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetUserRoutines()
+    {
+        var currentUserId = User.GetCurrentUserId();
+        var routines = await _routineService.GetUserRoutinesAsync(currentUserId);
+        
+        return Ok(new { data = routines });
+    }
 }

@@ -20,4 +20,7 @@ public class RoutineApiClient
 
     public async Task<HttpResponseMessage> DeleteRoutineAsync(int id)
         => await _client.DeleteAsync($"/api/routine/{id}");
+
+    public async Task<HttpResponseMessage> GetUserRoutinesAsync()
+        => await _client.GetAsync("/api/routine");
 }
