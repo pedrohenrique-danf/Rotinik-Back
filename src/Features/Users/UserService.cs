@@ -3,6 +3,7 @@ using Rotinik.Core.Exceptions;
 using Rotinik.Core.Data;
 using Rotinik.Features.Users.DTOs;
 using System.Security.Claims;
+using Rotinik.Features.Routines;
 
 namespace Rotinik.Features.Users;
 
@@ -109,6 +110,16 @@ public class UserService
         };
 
         await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        var defaultRoutine = new Routine 
+        { 
+            Title = "Inbox",
+            Category = "System",
+            IsDefault = true,
+            IdUser = user 
+        };
+        await _context.Routines.AddAsync(defaultRoutine);
         await _context.SaveChangesAsync();
     }
 

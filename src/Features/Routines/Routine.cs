@@ -10,4 +10,5 @@ public class Routine
     public string Category { get; set; } = string.Empty;
     public User IdUser { get; set; } = null!;
     public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
+    public bool IsDefault { get; set; } = false;
 }

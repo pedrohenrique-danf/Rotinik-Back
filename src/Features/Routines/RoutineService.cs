@@ -24,6 +24,7 @@ public class RoutineService
         {
             Title = dto.Title,
             Category = dto.Category,
+            IsDefault = false,
             IdUser = user
         };
 
@@ -34,7 +35,8 @@ public class RoutineService
         {
             Id = routine.Id,
             Title = routine.Title,
-            Category = routine.Category
+            Category = routine.Category,
+            IsDefault = routine.IsDefault
         };
     }
 
@@ -46,6 +48,10 @@ public class RoutineService
 
         if (routine.IdUser.Id != currentUserId)
             throw new ForbiddenException("Forbidden: You can only update your own routines.");
+
+        // Trava de segurança contra alteração
+        if (routine.IsDefault)
+            throw new ForbiddenException("Forbidden: You cannot modify the system's default routine.");
 
         if (!string.IsNullOrWhiteSpace(dto.Title))
             routine.Title = dto.Title;
@@ -65,6 +71,9 @@ public class RoutineService
         if (routine.IdUser.Id != currentUserId)
             throw new ForbiddenException("Forbidden: You can only delete your own routines.");
 
+        if (routine.IsDefault)
+            throw new ForbiddenException("Forbidden: You cannot delete the system's default routine.");
+
         _context.Routines.Remove(routine);
         await _context.SaveChangesAsync();
     }
@@ -77,7 +86,8 @@ public class RoutineService
             {
                 Id = r.Id,
                 Title = r.Title,
-                Category = r.Category
+                Category = r.Category,
+                IsDefault = r.IsDefault
             })
             .ToListAsync();
     }

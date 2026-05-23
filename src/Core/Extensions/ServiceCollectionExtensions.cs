@@ -11,6 +11,7 @@ using Rotinik.Core.Settings;
 using Rotinik.Features.Payments;
 using Rotinik.Features.Routines;
 using Rotinik.Features.Users;
+using Rotinik.Features.Tasks;
 
 namespace Rotinik.Core.Extensions;
 
@@ -95,7 +96,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<PaymentSimulationService>();
 
         services.AddScoped<RoutineService>();
-        services.AddScoped<Rotinik.Features.Tasks.TaskService>();
+        services.AddScoped<TaskService>();
 
         return services;
     }

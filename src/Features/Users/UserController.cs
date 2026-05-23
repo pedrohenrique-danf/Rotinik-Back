@@ -116,7 +116,7 @@ public class UserController : ControllerBase
     {
         return Ok(new 
         { 
-            message = "Bem-vindo à área VIP! Este conteúdo é exclusivo para assinantes Premium." 
+            message = "Premium Content Accessed." 
         });
     }
 }
