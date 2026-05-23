@@ -1,4 +1,5 @@
 using System.Text;
+using System.Security.Claims;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -71,10 +72,26 @@ public static class ServiceCollectionExtensions
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+            {
+                var partitionKey = httpContext.User.Identity?.IsAuthenticated == true 
+                    ? httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                    : httpContext.Connection.RemoteIpAddress?.ToString();
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey ?? "anonymous",
+                    partition => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 150,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0
+                    });
+            });
+
             options.AddFixedWindowLimiter("LoginPolicy", opt =>
             {
                 opt.Window = TimeSpan.FromMinutes(1);
-                opt.PermitLimit = 500; 
+                opt.PermitLimit = 50;
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 opt.QueueLimit = 0; 
             });

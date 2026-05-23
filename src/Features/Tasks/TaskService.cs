@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
 using Rotinik.Core.Data;
-using Rotinik.Features.Tasks.DTO;
+using Rotinik.Features.Tasks.DTOs; // Atualizado o Namespace
 
 namespace Rotinik.Features.Tasks;
 
@@ -82,7 +82,6 @@ public class TaskService
         if (!task.IsCompleted)
         {
             task.IsCompleted = true;
-            
             user.Points += 10;
             user.Coins += 5;
         }

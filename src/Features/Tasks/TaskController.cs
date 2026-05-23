@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rotinik.Core.Extensions;
-using Rotinik.Features.Tasks.DTO;
+using Rotinik.Features.Tasks.DTOs;
 
 namespace Rotinik.Features.Tasks;
 
@@ -18,6 +18,10 @@ public class TaskController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateTask(int routineId, TaskCreateDto dto)
     {
         var currentUserId = User.GetCurrentUserId();
@@ -26,6 +30,10 @@ public class TaskController : ControllerBase
     }
 
     [HttpPut("{taskId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateTask(int routineId, int taskId, TaskUpdateDto dto)
     {
         var currentUserId = User.GetCurrentUserId();
@@ -34,6 +42,9 @@ public class TaskController : ControllerBase
     }
 
     [HttpDelete("{taskId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteTask(int routineId, int taskId)
     {
         var currentUserId = User.GetCurrentUserId();
@@ -42,6 +53,9 @@ public class TaskController : ControllerBase
     }
 
     [HttpPatch("{taskId}/toggle")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ToggleCompletion(int routineId, int taskId)
     {
         var currentUserId = User.GetCurrentUserId();
@@ -57,7 +71,6 @@ public class TaskController : ControllerBase
     {
         var currentUserId = User.GetCurrentUserId();
         var tasks = await _taskService.GetTasksByRoutineAsync(routineId, currentUserId);
-        
         return Ok(new { data = tasks });
     }
 }

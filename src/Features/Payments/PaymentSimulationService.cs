@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Rotinik.Core.Exceptions;
 using Rotinik.Core.Data;
 using Rotinik.Features.Users;
 
@@ -27,7 +28,7 @@ public class PaymentSimulationService
             Status = PaymentStatus.Pending
         };
 
-        await _context.Payments.AddAsync(payment);
+        _context.Payments.Add(payment);
         await _context.SaveChangesAsync();
 
         return transactionId;
@@ -36,7 +37,12 @@ public class PaymentSimulationService
     public async Task ProcessPaymentSuccessAsync(string transactionId)
     {
         var payment = await _context.Payments.SingleOrDefaultAsync(p => p.TransactionId == transactionId);
-        if (payment == null || payment.Status != PaymentStatus.Pending) return;
+        
+        if (payment == null) 
+            throw new NotFoundException("Transaction not found.");
+            
+        if (payment.Status != PaymentStatus.Pending) 
+            throw new ConflictException("Transaction has already been processed.");
 
         payment.Status = PaymentStatus.Paid;
         payment.PaidAt = DateTime.UtcNow;
@@ -48,6 +54,8 @@ public class PaymentSimulationService
     
     public async Task<Payment?> GetByTransactionIdAsync(string transactionId)
     {
-        return await _context.Payments.SingleOrDefaultAsync(p => p.TransactionId == transactionId);
+        return await _context.Payments
+            .AsNoTracking()
+            .SingleOrDefaultAsync(p => p.TransactionId == transactionId);
     }
 }

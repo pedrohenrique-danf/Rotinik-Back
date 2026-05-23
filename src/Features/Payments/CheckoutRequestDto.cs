@@ -1,4 +1,4 @@
-namespace Rotinik.Features.Payments.DTOs;
+namespace Rotinik.Features.Payments;
 
 public class CheckoutRequestDto
 {

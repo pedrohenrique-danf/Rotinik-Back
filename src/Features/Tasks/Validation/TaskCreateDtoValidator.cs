@@ -1,6 +1,7 @@
 using FluentValidation;
+using Rotinik.Features.Tasks.DTOs;
 
-namespace Rotinik.Features.Tasks.DTO;
+namespace Rotinik.Features.Tasks.Validation;
 
 public class TaskCreateDtoValidator : AbstractValidator<TaskCreateDto>
 {

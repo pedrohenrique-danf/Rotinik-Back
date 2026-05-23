@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Rotinik.Features.Routines.DTO;
+using Rotinik.Features.Routines.DTOs;
 using Rotinik.Tests.Core;
 using Rotinik.Tests.Features.Users;
 using Xunit;

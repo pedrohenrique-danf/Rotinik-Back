@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
 using Rotinik.Core.Data;
-using Rotinik.Features.Routines.DTO;
+using Rotinik.Features.Routines.DTOs;
 
 namespace Rotinik.Features.Routines;
 
@@ -12,6 +12,24 @@ public class RoutineService
     public RoutineService(AppDbContext context)
     {
         _context = context;
+    }
+
+    private async Task<Routine> GetRoutineAndVerifyAccessAsync(int id, int currentUserId, string action)
+    {
+        var routine = await _context.Routines
+            .Include(r => r.IdUser)
+            .SingleOrDefaultAsync(r => r.Id == id);
+
+        if (routine == null)
+            throw new NotFoundException("Routine not found.");
+
+        if (routine.IdUser.Id != currentUserId)
+            throw new ForbiddenException($"Forbidden: You can only {action} your own routines.");
+
+        if (routine.IsDefault)
+            throw new ForbiddenException($"Forbidden: You cannot {action} the system's default routine.");
+
+        return routine;
     }
 
     public async Task<RoutineResponseDto> CreateRoutineAsync(int currentUserId, RoutineCreateDto dto)
@@ -28,7 +46,8 @@ public class RoutineService
             IdUser = user
         };
 
-        await _context.Routines.AddAsync(routine);
+        // 2. Corrigido para .Add() síncrono (Melhor prática do EF Core)
+        _context.Routines.Add(routine);
         await _context.SaveChangesAsync();
         
         return new RoutineResponseDto
@@ -42,16 +61,8 @@ public class RoutineService
 
     public async Task UpdateRoutineAsync(int id, int currentUserId, RoutineUpdateDto dto)
     {
-        var routine = await _context.Routines.Include(r => r.IdUser).SingleOrDefaultAsync(r => r.Id == id);
-        if (routine == null)
-            throw new NotFoundException("Routine not found.");
-
-        if (routine.IdUser.Id != currentUserId)
-            throw new ForbiddenException("Forbidden: You can only update your own routines.");
-
-        // Trava de segurança contra alteração
-        if (routine.IsDefault)
-            throw new ForbiddenException("Forbidden: You cannot modify the system's default routine.");
+        // Uso do método auxiliar (DRY)
+        var routine = await GetRoutineAndVerifyAccessAsync(id, currentUserId, "update");
 
         if (!string.IsNullOrWhiteSpace(dto.Title))
             routine.Title = dto.Title;
@@ -64,15 +75,8 @@ public class RoutineService
 
     public async Task DeleteRoutineAsync(int id, int currentUserId)
     {
-        var routine = await _context.Routines.Include(r => r.IdUser).SingleOrDefaultAsync(r => r.Id == id);
-        if (routine == null)
-            throw new NotFoundException("Routine not found.");
-
-        if (routine.IdUser.Id != currentUserId)
-            throw new ForbiddenException("Forbidden: You can only delete your own routines.");
-
-        if (routine.IsDefault)
-            throw new ForbiddenException("Forbidden: You cannot delete the system's default routine.");
+        // Uso do método auxiliar (DRY)
+        var routine = await GetRoutineAndVerifyAccessAsync(id, currentUserId, "delete");
 
         _context.Routines.Remove(routine);
         await _context.SaveChangesAsync();
@@ -81,6 +85,7 @@ public class RoutineService
     public async Task<List<RoutineResponseDto>> GetUserRoutinesAsync(int currentUserId)
     {
         return await _context.Routines
+            .AsNoTracking() // 3. Ganho de performance em Queries de leitura
             .Where(r => r.IdUser.Id == currentUserId)
             .Select(r => new RoutineResponseDto
             {

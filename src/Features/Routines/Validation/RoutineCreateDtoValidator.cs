@@ -1,6 +1,7 @@
 using FluentValidation;
+using Rotinik.Features.Routines.DTOs;
 
-namespace Rotinik.Features.Routines.DTO;
+namespace Rotinik.Features.Routines.Validation;
 
 public class RoutineCreateDtoValidator : AbstractValidator<RoutineCreateDto>
 {

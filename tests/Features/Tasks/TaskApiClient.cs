@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-using Rotinik.Features.Tasks.DTO;
+using Rotinik.Features.Tasks.DTOs;
 
 namespace Rotinik.Tests.Features.Tasks;
 

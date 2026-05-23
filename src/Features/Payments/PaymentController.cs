@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rotinik.Core.Extensions;
-using Rotinik.Features.Payments.DTOs;
 
 namespace Rotinik.Features.Payments;
 
 [Route("api/payments")]
 [ApiController]
+[Tags("Payments (Simulação)")]
 public class PaymentController : ControllerBase
 {
     private readonly PaymentSimulationService _paymentService;
@@ -18,6 +18,8 @@ public class PaymentController : ControllerBase
 
     [Authorize]
     [HttpPost("checkout")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto dto)
     {
         var userId = User.GetCurrentUserId();
@@ -33,6 +35,9 @@ public class PaymentController : ControllerBase
     }
 
     [HttpPost("webhook-mock/{transactionId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ApprovePaymentMock(string transactionId)
     {
         await _paymentService.ProcessPaymentSuccessAsync(transactionId);
@@ -41,10 +46,15 @@ public class PaymentController : ControllerBase
 
     [Authorize]
     [HttpGet("status/{transactionId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckStatus(string transactionId)
     {
         var payment = await _paymentService.GetByTransactionIdAsync(transactionId);
-        if (payment == null) return NotFound();
+        
+        if (payment == null) 
+            return NotFound(new { message = "Transaction not found." });
 
         return Ok(new 
         { 

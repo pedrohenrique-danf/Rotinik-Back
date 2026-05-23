@@ -36,8 +36,10 @@ public class UserController : ControllerBase
 
     [HttpPost("refresh-token")]
     [Tags(AuthTag)]
+    [EnableRateLimiting("LoginPolicy")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
     {
         var response = await _userService.RefreshTokenAsync(dto);
@@ -46,9 +48,11 @@ public class UserController : ControllerBase
 
     [HttpPost]
     [Tags(AccountTag)]
+    [EnableRateLimiting("LoginPolicy")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> CreateUser(UserRegistrationDto dto)
     {
         await _userService.CreateUserAsync(dto);
@@ -107,7 +111,7 @@ public class UserController : ControllerBase
         return Ok(profile);
     }
 
-    [Authorize(Policy = "isPremium")] 
+    [Authorize(Policy = "PremiumOnly")]
     [HttpGet("conteudo-vip")]
     [Tags(PremiumTag)]
     [ProducesResponseType(StatusCodes.Status200OK)]
