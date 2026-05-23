@@ -11,9 +11,9 @@ namespace Rotinik.Features.Users;
 public class UserController : ControllerBase
 {
     private const string AuthTag = "User (Autenticação)";
-    private const string AccountTag = "User (Gerenciamento de Conta)";
-    private const string ProfileTag = "User (Perfil Público)";
-    private const string PremiumTag = "User (Conteúdo Premium)";
+    private const string AccountTag = "User (Gerenciamento)";
+    private const string ProfileTag = "User (Exibição de Perfil)";
+    private const string PremiumTag = "User (Acesso Premium)";
 
     private readonly UserService _userService;
 

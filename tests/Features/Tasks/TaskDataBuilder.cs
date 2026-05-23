@@ -1,0 +1,21 @@
+using Rotinik.Features.Tasks;
+using Rotinik.Features.Tasks.DTO;
+
+namespace Rotinik.Tests.Features.Tasks;
+
+public static class TaskDataBuilder
+{
+    public static TaskCreateDto CreateValidTaskDto() => new()
+    {
+        Title = $"Test Task {Guid.NewGuid():N}",
+        Frequency = TaskFrequency.Daily,
+        Priority = TaskPriority.Important
+    };
+
+    public static TaskUpdateDto CreateValidUpdateDto() => new()
+    {
+        Title = "Updated Task Title",
+        Frequency = TaskFrequency.Monthly,
+        Priority = TaskPriority.Urgent
+    };
+}

@@ -92,8 +92,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<TokenService>();
         services.AddScoped<UserService>();
         
-        services.AddScoped<RoutineService>();
         services.AddScoped<PaymentSimulationService>();
+
+        services.AddScoped<RoutineService>();
+        services.AddScoped<Rotinik.Features.Tasks.TaskService>();
 
         return services;
     }

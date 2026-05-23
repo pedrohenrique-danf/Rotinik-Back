@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Routine> Routines { get; set; }
+    public DbSet<Rotinik.Features.Tasks.TaskItem> Tasks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

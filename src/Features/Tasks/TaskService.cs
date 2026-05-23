@@ -1,0 +1,95 @@
+using Microsoft.EntityFrameworkCore;
+using Rotinik.Core.Exceptions;
+using Rotinik.Core.Data;
+using Rotinik.Features.Tasks.DTO;
+
+namespace Rotinik.Features.Tasks;
+
+public class TaskService
+{
+    private readonly AppDbContext _context;
+
+    public TaskService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    private async Task VerifyRoutineOwnershipAsync(int routineId, int currentUserId)
+    {
+        var routine = await _context.Routines.Include(r => r.IdUser).SingleOrDefaultAsync(r => r.Id == routineId);
+        
+        if (routine == null)
+            throw new NotFoundException("Routine not found.");
+
+        if (routine.IdUser.Id != currentUserId)
+            throw new ForbiddenException("Forbidden: You can only modify tasks in your own routines.");
+    }
+
+    public async Task<TaskResponseDto> CreateTaskAsync(int routineId, int currentUserId, TaskCreateDto dto)
+    {
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+
+        var task = new TaskItem
+        {
+            Title = dto.Title,
+            Frequency = dto.Frequency,
+            Priority = dto.Priority,
+            IsCompleted = false,
+            RoutineId = routineId
+        };
+
+        await _context.Tasks.AddAsync(task);
+        await _context.SaveChangesAsync();
+
+        return MapToResponse(task);
+    }
+
+    public async Task UpdateTaskAsync(int routineId, int taskId, int currentUserId, TaskUpdateDto dto)
+    {
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+
+        var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
+        if (task == null) throw new NotFoundException("Task not found.");
+
+        if (!string.IsNullOrWhiteSpace(dto.Title)) task.Title = dto.Title;
+        if (dto.Frequency.HasValue) task.Frequency = dto.Frequency.Value;
+        if (dto.Priority.HasValue) task.Priority = dto.Priority.Value;
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteTaskAsync(int routineId, int taskId, int currentUserId)
+    {
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+
+        var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
+        if (task == null) throw new NotFoundException("Task not found.");
+
+        _context.Tasks.Remove(task);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task ToggleTaskCompletionAsync(int routineId, int taskId, int currentUserId)
+    {
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+
+        var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
+        if (task == null) throw new NotFoundException("Task not found.");
+
+        task.IsCompleted = !task.IsCompleted;
+        await _context.SaveChangesAsync();
+    }
+
+    private static TaskResponseDto MapToResponse(TaskItem task)
+    {
+        return new TaskResponseDto
+        {
+            Id = task.Id,
+            Title = task.Title,
+            Frequency = task.Frequency.ToString(),
+            Priority = task.Priority.ToString(),
+            IsCompleted = task.IsCompleted,
+            RoutineId = task.RoutineId
+        };
+    }
+}
