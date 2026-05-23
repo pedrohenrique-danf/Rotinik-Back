@@ -76,7 +76,21 @@ public class TaskService
         var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
         if (task == null) throw new NotFoundException("Task not found.");
 
-        task.IsCompleted = !task.IsCompleted;
+        var user = await _context.Users.FindAsync(currentUserId);
+        if (user == null) throw new NotFoundException("User not found.");
+
+        if (!task.IsCompleted)
+        {
+            task.IsCompleted = true;
+            
+            user.Points += 10;
+            user.Coins += 5;
+        }
+        else
+        {
+            task.IsCompleted = false;
+        }
+
         await _context.SaveChangesAsync();
     }
 
@@ -91,5 +105,24 @@ public class TaskService
             IsCompleted = task.IsCompleted,
             RoutineId = task.RoutineId
         };
+    }
+
+    public async Task<List<TaskResponseDto>> GetTasksByRoutineAsync(int routineId, int currentUserId)
+    {
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+
+        return await _context.Tasks
+            .Where(t => t.RoutineId == routineId)
+            .OrderBy(t => t.IsCompleted) 
+            .Select(t => new TaskResponseDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Frequency = t.Frequency.ToString(),
+                Priority = t.Priority.ToString(),
+                IsCompleted = t.IsCompleted,
+                RoutineId = t.RoutineId
+            })
+            .ToListAsync();
     }
 }

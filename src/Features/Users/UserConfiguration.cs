@@ -36,6 +36,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.PhoneNumber)
             .IsRequired()
             .HasMaxLength(20);
+        
+        builder.Property(x => x.Points)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(x => x.Coins)
+            .IsRequired()
+            .HasDefaultValue(0);
 
         builder.HasIndex(x => x.PhoneNumber).IsUnique();
         builder.HasIndex(x => x.Email).IsUnique();

@@ -10,5 +10,8 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public bool isPremium { get; set; } = false;
+    public int Points { get; set; } = 0;
+    public int Coins { get; set; } = 0;
+
     public ICollection<UserRefreshToken> RefreshTokens { get; set; } = new List<UserRefreshToken>();
 }

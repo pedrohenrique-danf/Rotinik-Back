@@ -48,4 +48,16 @@ public class TaskController : ControllerBase
         await _taskService.ToggleTaskCompletionAsync(routineId, taskId, currentUserId);
         return NoContent();
     }
+
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTasks(int routineId)
+    {
+        var currentUserId = User.GetCurrentUserId();
+        var tasks = await _taskService.GetTasksByRoutineAsync(routineId, currentUserId);
+        
+        return Ok(new { data = tasks });
+    }
 }

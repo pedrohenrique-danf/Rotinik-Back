@@ -132,7 +132,9 @@ public class UserService
         return new UserProfileDto
         {
             Name = user.Name,
-            UserName = user.UserName
+            UserName = user.UserName,
+            Points = user.Points,
+            isPremium = user.isPremium
         };
     }
 
@@ -148,7 +150,10 @@ public class UserService
             Name = user.Name,
             UserName = user.UserName,
             Email = user.Email,
-            BirthDate = user.BirthDate
+            BirthDate = user.BirthDate,
+            Points = user.Points,
+            Coins = user.Coins,
+            isPremium = user.isPremium
         };
     }
 

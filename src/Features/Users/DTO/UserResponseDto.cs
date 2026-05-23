@@ -7,4 +7,7 @@ public class UserResponseDto
     public string UserName { get; set; } = string.Empty;
     public DateTime BirthDate { get; set; }
     public string Email { get; set; } = string.Empty;
+    public int Points { get; set; }
+    public int Coins { get; set; }
+    public bool isPremium { get; set; }
 }
