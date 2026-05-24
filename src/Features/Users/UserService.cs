@@ -4,6 +4,7 @@ using Rotinik.Core.Data;
 using Rotinik.Features.Users.DTOs;
 using System.Security.Claims;
 using Rotinik.Features.Routines;
+using Rotinik.Core.Extensions;
 
 namespace Rotinik.Features.Users;
 
@@ -51,10 +52,8 @@ public class UserService
     public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto)
     {
         var principal = _tokenService.GetPrincipalFromExpiredToken(dto.AccessToken);
-        var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            throw new UnauthorizedException("Invalid token payload.");
+        
+        var userId = principal.GetCurrentUserId(); 
 
         var user = await _context.Users
             .Include(u => u.RefreshTokens)
@@ -129,12 +128,15 @@ public class UserService
         if (user == null) 
             throw new NotFoundException("User not found.");
 
+        var rankPosition = await CalculateUserRankAsync(user.Points);
+
         return new UserProfileDto
         {
             Name = user.Name,
             UserName = user.UserName,
             Points = user.Points,
-            isPremium = user.isPremium
+            isPremium = user.isPremium,
+            RankPosition = rankPosition
         };
     }
 
@@ -143,6 +145,8 @@ public class UserService
         var user = await _context.Users.FindAsync(userId);
         if (user == null) 
             throw new NotFoundException("User not found.");
+
+        var rankPosition = await CalculateUserRankAsync(user.Points);
 
         return new UserResponseDto
         {
@@ -153,7 +157,8 @@ public class UserService
             BirthDate = user.BirthDate,
             Points = user.Points,
             Coins = user.Coins,
-            isPremium = user.isPremium
+            isPremium = user.isPremium,
+            RankPosition = rankPosition
         };
     }
 
@@ -206,5 +211,35 @@ public class UserService
 
         user.isPremium = true;
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<UserRankDto>> GetTopRankedUsersAsync(int limit = 100)
+    {
+        var topUsers = await _context.Users
+            .AsNoTracking()
+            .OrderByDescending(u => u.Points)
+            .Take(limit)
+            .Select(u => new 
+            { 
+                u.UserName, 
+                u.Points, 
+                u.isPremium 
+            })
+            .ToListAsync();
+
+        var rankList = topUsers.Select((u, index) => new UserRankDto
+        {
+            RankPosition = index + 1,
+            UserName = u.UserName,
+            Points = u.Points,
+            isPremium = u.isPremium
+        }).ToList();
+
+        return rankList;
+    }
+
+    private async Task<int> CalculateUserRankAsync(int userPoints)
+    {
+        return await _context.Users.CountAsync(u => u.Points > userPoints) + 1;
     }
 }

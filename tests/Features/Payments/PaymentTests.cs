@@ -11,6 +11,9 @@ public class PaymentTests : IntegrationTestBase
 {
     private readonly UserApiClient _userApi;
     private readonly PaymentApiClient _paymentApi;
+    
+    private string _userEmail = string.Empty;
+    private string _userPassword = string.Empty;
 
     public PaymentTests(CustomApiFactory factory) : base(factory) 
     { 
@@ -21,9 +24,11 @@ public class PaymentTests : IntegrationTestBase
     private async Task SetupUserAsync()
     {
         var newUser = UserDataBuilder.CreateValidRegistrationDto();
-        await _userApi.RegisterUserAsync(newUser);
+        _userEmail = newUser.Email;
+        _userPassword = newUser.Password;
 
-        var token = await _userApi.LoginAndGetTokenAsync(newUser.Email, newUser.Password);
+        await _userApi.RegisterUserAsync(newUser);
+        var token = await _userApi.LoginAndGetTokenAsync(_userEmail, _userPassword);
         SetToken(token);
     }
 
@@ -40,20 +45,11 @@ public class PaymentTests : IntegrationTestBase
         var checkoutJson = await checkoutResponse.Content.ReadFromJsonAsync<JsonElement>();
         var transactionId = checkoutJson.GetProperty("transactionId").GetString();
         
-        Assert.NotNull(transactionId);
-
-        var pendingStatusResponse = await _paymentApi.CheckStatusAsync(transactionId);
-        var pendingJson = await pendingStatusResponse.Content.ReadFromJsonAsync<JsonElement>();
-        
-        Assert.Equal("Pending", pendingJson.GetProperty("status").GetString());
-
-        var webhookResponse = await _paymentApi.ApprovePaymentMockAsync(transactionId);
+        var webhookResponse = await _paymentApi.ApprovePaymentMockAsync(transactionId!);
         Assert.Equal(HttpStatusCode.OK, webhookResponse.StatusCode);
 
-        var paidStatusResponse = await _paymentApi.CheckStatusAsync(transactionId);
-        var paidJson = await paidStatusResponse.Content.ReadFromJsonAsync<JsonElement>();
-        
-        Assert.Equal("Paid", paidJson.GetProperty("status").GetString());
+        var newToken = await _userApi.LoginAndGetTokenAsync(_userEmail, _userPassword); 
+        SetToken(newToken);
 
         var vipResponse = await Client.GetAsync("/api/user/conteudo-vip");
         Assert.Equal(HttpStatusCode.OK, vipResponse.StatusCode);

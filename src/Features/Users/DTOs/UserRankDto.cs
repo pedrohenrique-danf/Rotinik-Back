@@ -1,10 +1,9 @@
 namespace Rotinik.Features.Users.DTOs;
 
-public class UserProfileDto
+public class UserRankDto
 {
-    public string Name { get; set; } = string.Empty;
+    public int RankPosition { get; set; }
     public string UserName { get; set; } = string.Empty;
     public int Points { get; set; }
     public bool isPremium { get; set; }
-    public int RankPosition { get; set; }
 }

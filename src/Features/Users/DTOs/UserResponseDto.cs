@@ -10,4 +10,5 @@ public class UserResponseDto
     public int Points { get; set; }
     public int Coins { get; set; }
     public bool isPremium { get; set; }
+    public int RankPosition { get; set; }
 }

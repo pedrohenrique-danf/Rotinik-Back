@@ -94,8 +94,6 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetCurrentUser()
     {
         var currentUserId = User.GetCurrentUserId();
-        if (currentUserId == 0)
-            return Unauthorized(new { message = "Invalid token payload." });
 
         var response = await _userService.GetCurrentUserAsync(currentUserId);
         return Ok(response);
@@ -109,6 +107,17 @@ public class UserController : ControllerBase
     {
         var profile = await _userService.GetPublicProfileAsync(username);
         return Ok(profile);
+    }
+
+    [HttpGet("rank")]
+    [Tags(ProfileTag)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetRank([FromQuery] int limit = 100)
+    {
+        if (limit > 500) limit = 500; 
+
+        var rank = await _userService.GetTopRankedUsersAsync(limit);
+        return Ok(rank);
     }
 
     [Authorize(Policy = "PremiumOnly")]
