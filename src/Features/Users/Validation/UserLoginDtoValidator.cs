@@ -1,6 +1,6 @@
 using FluentValidation;
 using Rotinik.Features.Users.DTOs;
-using Rotinik.Core.Validation;
+using Rotinik.Core.Extensions;
 
 namespace Rotinik.Features.Users.Validation;
 

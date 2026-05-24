@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Rotinik.Core.Validation;
+namespace Rotinik.Core.Extensions;
 
 public static class ValidationExtensions
 {

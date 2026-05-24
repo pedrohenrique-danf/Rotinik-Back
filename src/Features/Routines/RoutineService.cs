@@ -46,7 +46,6 @@ public class RoutineService
             IdUser = user
         };
 
-        // 2. Corrigido para .Add() síncrono (Melhor prática do EF Core)
         _context.Routines.Add(routine);
         await _context.SaveChangesAsync();
         
@@ -61,7 +60,6 @@ public class RoutineService
 
     public async Task UpdateRoutineAsync(int id, int currentUserId, RoutineUpdateDto dto)
     {
-        // Uso do método auxiliar (DRY)
         var routine = await GetRoutineAndVerifyAccessAsync(id, currentUserId, "update");
 
         if (!string.IsNullOrWhiteSpace(dto.Title))
@@ -75,7 +73,6 @@ public class RoutineService
 
     public async Task DeleteRoutineAsync(int id, int currentUserId)
     {
-        // Uso do método auxiliar (DRY)
         var routine = await GetRoutineAndVerifyAccessAsync(id, currentUserId, "delete");
 
         _context.Routines.Remove(routine);
@@ -85,7 +82,7 @@ public class RoutineService
     public async Task<List<RoutineResponseDto>> GetUserRoutinesAsync(int currentUserId)
     {
         return await _context.Routines
-            .AsNoTracking() // 3. Ganho de performance em Queries de leitura
+            .AsNoTracking()
             .Where(r => r.IdUser.Id == currentUserId)
             .Select(r => new RoutineResponseDto
             {
