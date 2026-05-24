@@ -19,7 +19,7 @@ public class UserService
         _tokenService = tokenService;
     }
 
-    public async Task<AuthResponseDto> LoginAsync(UserLoginDto dto)
+    public async Task<TokenDto> LoginAsync(UserLoginDto dto)
     {
         var user = await _context.Users
             .Include(u => u.RefreshTokens)
@@ -28,31 +28,15 @@ public class UserService
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
             throw new UnauthorizedException("Invalid email or password.");
 
-        var accessToken = _tokenService.GenerateJwtToken(user);
-        var refreshToken = _tokenService.GenerateRefreshToken();
-        var refreshTokenHash = _tokenService.HashToken(refreshToken);
-
-        var expiredTokens = user.RefreshTokens.Where(rt => rt.ExpiryTime <= DateTime.UtcNow).ToList();
-        foreach (var token in expiredTokens)
-        {
-            user.RefreshTokens.Remove(token);
-        }
-
-        user.RefreshTokens.Add(new UserRefreshToken
-        {
-            TokenHash = refreshTokenHash,
-            ExpiryTime = DateTime.UtcNow.AddDays(7)
-        });
-
+        var tokenPair = GenerateAndAssignTokens(user);
         await _context.SaveChangesAsync();
 
-        return new AuthResponseDto { AccessToken = accessToken, RefreshToken = refreshToken };
+        return tokenPair;
     }
 
-    public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto)
+    public async Task<TokenDto> RefreshTokenAsync(TokenDto dto)
     {
         var principal = _tokenService.GetPrincipalFromExpiredToken(dto.AccessToken);
-        
         var userId = principal.GetCurrentUserId(); 
 
         var user = await _context.Users
@@ -72,19 +56,31 @@ public class UserService
 
         user.RefreshTokens.Remove(activeSession);
 
-        var newAccessToken = _tokenService.GenerateJwtToken(user);
-        var newRefreshToken = _tokenService.GenerateRefreshToken();
-        var newRefreshTokenHash = _tokenService.HashToken(newRefreshToken);
+        var tokenPair = GenerateAndAssignTokens(user);
+        await _context.SaveChangesAsync();
+
+        return tokenPair;
+    }
+
+    private TokenDto GenerateAndAssignTokens(User user)
+    {
+        var accessToken = _tokenService.GenerateJwtToken(user);
+        var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshTokenHash = _tokenService.HashToken(refreshToken);
+
+        var expiredTokens = user.RefreshTokens.Where(rt => rt.ExpiryTime <= DateTime.UtcNow).ToList();
+        foreach (var token in expiredTokens)
+        {
+            user.RefreshTokens.Remove(token);
+        }
 
         user.RefreshTokens.Add(new UserRefreshToken
         {
-            TokenHash = newRefreshTokenHash,
+            TokenHash = refreshTokenHash,
             ExpiryTime = DateTime.UtcNow.AddDays(7)
         });
 
-        await _context.SaveChangesAsync();
-
-        return new AuthResponseDto { AccessToken = newAccessToken, RefreshToken = newRefreshToken };
+        return new TokenDto { AccessToken = accessToken, RefreshToken = refreshToken };
     }
 
     public async Task CreateUserAsync(UserRegistrationDto dto)
@@ -135,7 +131,7 @@ public class UserService
             Name = user.Name,
             UserName = user.UserName,
             Points = user.Points,
-            isPremium = user.isPremium,
+            IsPremium = user.IsPremium,
             RankPosition = rankPosition
         };
     }
@@ -157,9 +153,14 @@ public class UserService
             BirthDate = user.BirthDate,
             Points = user.Points,
             Coins = user.Coins,
-            isPremium = user.isPremium,
+            IsPremium = user.IsPremium,
             RankPosition = rankPosition
         };
+    }
+
+    private async Task<int> CalculateUserRankAsync(int userPoints)
+    {
+        return await _context.Users.CountAsync(u => u.Points > userPoints) + 1;
     }
 
     public async Task UpdateUserAsync(int id, int currentUserId, UserUpdateDto dto)
@@ -206,10 +207,10 @@ public class UserService
         if (user == null)
             throw new NotFoundException("User not found.");
 
-        if (user.isPremium)
+        if (user.IsPremium)
             throw new ConflictException("Your account is already Premium.");
 
-        user.isPremium = true;
+        user.IsPremium = true;
         await _context.SaveChangesAsync();
     }
 
@@ -223,23 +224,16 @@ public class UserService
             { 
                 u.UserName, 
                 u.Points, 
-                u.isPremium 
+                u.IsPremium 
             })
             .ToListAsync();
 
-        var rankList = topUsers.Select((u, index) => new UserRankDto
+        return topUsers.Select((u, index) => new UserRankDto
         {
             RankPosition = index + 1,
             UserName = u.UserName,
             Points = u.Points,
-            isPremium = u.isPremium
+            IsPremium = u.IsPremium
         }).ToList();
-
-        return rankList;
-    }
-
-    private async Task<int> CalculateUserRankAsync(int userPoints)
-    {
-        return await _context.Users.CountAsync(u => u.Points > userPoints) + 1;
     }
 }

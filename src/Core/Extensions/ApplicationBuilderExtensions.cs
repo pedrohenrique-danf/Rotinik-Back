@@ -1,5 +1,4 @@
 using Scalar.AspNetCore;
-using Rotinik.Core.Middleware;
 using Rotinik.Core.Data;
 
 namespace Rotinik.Core.Extensions;
@@ -21,12 +20,11 @@ public static class ApplicationBuilderExtensions
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                
                 db.Database.EnsureCreated();
             }
         }
 
-        app.UseMiddleware<GlobalExceptionMiddleware>();
+        app.UseExceptionHandler();
 
         app.UseRateLimiter();
 

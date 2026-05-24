@@ -71,7 +71,7 @@ public class UserTests : IntegrationTestBase
         var oldAccessToken = loginResult.GetProperty("data").GetProperty("accessToken").GetString();
         var oldRefreshToken = loginResult.GetProperty("data").GetProperty("refreshToken").GetString();
 
-        var refreshRequest = new RefreshTokenRequestDto
+        var refreshRequest = new TokenDto
         {
             AccessToken = oldAccessToken!,
             RefreshToken = oldRefreshToken!

@@ -31,7 +31,7 @@ public class UserApiClient
     public async Task<HttpResponseMessage> LoginAsync(UserLoginDto dto) 
         => await _client.PostAsJsonAsync("/api/user/login", dto);
         
-    public async Task<HttpResponseMessage> RefreshTokenAsync(RefreshTokenRequestDto dto)
+    public async Task<HttpResponseMessage> RefreshTokenAsync(TokenDto dto)
         => await _client.PostAsJsonAsync("/api/user/refresh-token", dto);
 
     public async Task<string> LoginAndGetTokenAsync(string email, string password)

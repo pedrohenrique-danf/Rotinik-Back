@@ -9,11 +9,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Rotinik.Core.Data;
 using Rotinik.Core.Settings;
-using Rotinik.Features.Payments;
-using Rotinik.Features.Routines;
-using Rotinik.Features.Users;
-using Rotinik.Features.Tasks;
-using Rotinik.Features.Medals;
+using Rotinik.Core.Exceptions;
 
 namespace Rotinik.Core.Extensions;
 
@@ -40,7 +36,9 @@ public static class ServiceCollectionExtensions
         services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
         
         var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
-        var jwtSecret = jwtSettings?.Secret ?? "TemporaryKeySoEFCoreMigrationDoesNotBreak!";
+        
+        if (string.IsNullOrWhiteSpace(jwtSettings?.Secret))
+            throw new InvalidOperationException("JWT Secret is missing in appsettings.json.");
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -48,9 +46,9 @@ public static class ServiceCollectionExtensions
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-                    ValidAudience = jwtSettings?.Audience,
-                    ValidIssuer = jwtSettings?.Issuer,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+                    ValidAudience = jwtSettings.Audience,
+                    ValidIssuer = jwtSettings.Issuer,
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
@@ -108,14 +106,17 @@ public static class ServiceCollectionExtensions
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<Program>();
 
-        services.AddScoped<TokenService>();
-        services.AddScoped<UserService>();
-        services.AddScoped<MedalService>();
-        
-        services.AddScoped<PaymentSimulationService>();
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
 
-        services.AddScoped<RoutineService>();
-        services.AddScoped<TaskService>();
+        var assembly = typeof(Program).Assembly;
+        var serviceTypes = assembly.GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract && t.Name.EndsWith("Service"));
+
+        foreach (var type in serviceTypes)
+        {
+            services.AddScoped(type);
+        }
 
         return services;
     }
@@ -127,8 +128,8 @@ public static class ServiceCollectionExtensions
             options.AddPolicy("AllowAll", policy =>
             {
                 policy.AllowAnyOrigin()
-                      .AllowAnyMethod()
-                      .AllowAnyHeader();
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
             });
         });
 

@@ -40,7 +40,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
+    public async Task<IActionResult> RefreshToken(TokenDto dto)
     {
         var response = await _userService.RefreshTokenAsync(dto);
         return Ok(new { data = response, message = "Token refreshed successfully!" });

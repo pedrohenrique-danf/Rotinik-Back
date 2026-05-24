@@ -30,7 +30,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.BirthDate)
             .IsRequired();
 
-        builder.Property(x => x.isPremium)
+        builder.Property(x => x.IsPremium)
             .IsRequired()
             .HasDefaultValue(false);
 

@@ -15,8 +15,7 @@ public class UserUpdateDtoValidator : AbstractValidator<UserUpdateDto>
             .MustBeValidBirthDate();
 
         RuleFor(user => user.PhoneNumber)
-            .NotEmpty().WithMessage("Phone number is required.")
-            .MaximumLength(20).WithMessage("Phone number cannot exceed 20 characters.");
+            .MustBeValidPhoneNumber();
             
         RuleFor(user => user.Password)
             .MustBeStrongPassword()
