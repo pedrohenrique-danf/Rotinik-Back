@@ -13,6 +13,7 @@ using Rotinik.Features.Payments;
 using Rotinik.Features.Routines;
 using Rotinik.Features.Users;
 using Rotinik.Features.Tasks;
+using Rotinik.Features.Medals;
 
 namespace Rotinik.Core.Extensions;
 
@@ -82,7 +83,7 @@ public static class ServiceCollectionExtensions
                     partitionKey ?? "anonymous",
                     partition => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 150,
+                        PermitLimit = 500,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0
                     });
@@ -91,7 +92,7 @@ public static class ServiceCollectionExtensions
             options.AddFixedWindowLimiter("LoginPolicy", opt =>
             {
                 opt.Window = TimeSpan.FromMinutes(1);
-                opt.PermitLimit = 50;
+                opt.PermitLimit = 500;
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 opt.QueueLimit = 0; 
             });
@@ -109,6 +110,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<TokenService>();
         services.AddScoped<UserService>();
+        services.AddScoped<MedalService>();
         
         services.AddScoped<PaymentSimulationService>();
 

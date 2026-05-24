@@ -106,16 +106,24 @@ public class RoutineTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GetUserRoutines_ReturnsOnlyCurrentUserRoutines()
-    {
-        await AuthenticateAsync();
+public async Task GetUserRoutines_ReturnsOnlyCurrentUserRoutines()
+{
+    await AuthenticateAsync();
 
-        var response = await _routineApi.GetUserRoutinesAsync();
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    await _routineApi.CreateRoutineAsync(new RoutineCreateDto 
+    { 
+        Title = "Rotina B1", 
+        Category = "Test" 
+    });
 
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var routines = json.GetProperty("data").EnumerateArray().ToList();
+    var response = await _routineApi.GetUserRoutinesAsync();
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        Assert.Contains(routines, r => r.GetProperty("title").GetString() == "Inbox");
-    }
+    var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+    var routines = json.GetProperty("data").EnumerateArray().ToList();
+
+    Assert.Equal(2, routines.Count);
+    Assert.Contains(routines, r => r.GetProperty("title").GetString() == "Inbox");
+    Assert.Contains(routines, r => r.GetProperty("title").GetString() == "Rotina B1");
+}
 }

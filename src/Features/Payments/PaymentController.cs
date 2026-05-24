@@ -6,7 +6,6 @@ namespace Rotinik.Features.Payments;
 
 [Route("api/payments")]
 [ApiController]
-[Tags("Payments (Simulação)")]
 public class PaymentController : ControllerBase
 {
     private readonly PaymentSimulationService _paymentService;

@@ -9,17 +9,18 @@ namespace Rotinik.Tests.Core;
 public abstract class IntegrationTestBase : IAsyncLifetime
 {
     protected readonly HttpClient Client;
-    private readonly CustomApiFactory _factory;
+    
+    protected readonly CustomApiFactory Factory; 
 
     protected IntegrationTestBase(CustomApiFactory factory)
     {
-        _factory = factory;
+        Factory = factory; 
         Client = factory.CreateClient();
     }
 
     public async Task InitializeAsync()
     {
-        using var scope = _factory.Services.CreateScope();
+        using var scope = Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await context.Database.EnsureDeletedAsync();
         await context.Database.EnsureCreatedAsync();

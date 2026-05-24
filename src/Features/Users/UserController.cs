@@ -101,6 +101,7 @@ public class UserController : ControllerBase
 
     [HttpGet("profile/{username}")]
     [Tags(ProfileTag)]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPublicProfile(string username)

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Rotinik.Features.Payments;
 using Rotinik.Features.Routines;
 using Rotinik.Features.Users;
+using Rotinik.Features.Medals;
 
 namespace Rotinik.Core.Data;
 
@@ -14,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<Payment> Payments { get; set; }
     public DbSet<Routine> Routines { get; set; }
     public DbSet<Rotinik.Features.Tasks.TaskItem> Tasks { get; set; }
+    public DbSet<Medal> Medals { get; set; }
+    public DbSet<UserMedal> UserMedals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

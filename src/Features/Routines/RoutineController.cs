@@ -10,7 +10,6 @@ namespace Rotinik.Features.Routines;
 [ApiController]
 public class RoutineController : ControllerBase
 {
-    private const string RoutineTag = "Routine (Gerenciamento)";
     private readonly RoutineService _routineService;
 
     public RoutineController(RoutineService routineService)
@@ -19,7 +18,6 @@ public class RoutineController : ControllerBase
     }
 
     [HttpPost]
-    [Tags(RoutineTag)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -34,7 +32,6 @@ public class RoutineController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Tags(RoutineTag)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -48,7 +45,6 @@ public class RoutineController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Tags(RoutineTag)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -61,7 +57,6 @@ public class RoutineController : ControllerBase
     }
 
     [HttpGet]
-    [Tags(RoutineTag)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUserRoutines()

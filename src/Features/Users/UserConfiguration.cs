@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Rotinik.Features.Medals;
 
 namespace Rotinik.Features.Users;
 
@@ -44,6 +45,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.Coins)
             .IsRequired()
             .HasDefaultValue(0);
+
+        builder.HasMany<Medal>()
+        .WithMany()
+        .UsingEntity<UserMedal>(
+            j => j.HasOne(um => um.Medal).WithMany().HasForeignKey(um => um.MedalId),
+            j => j.HasOne(um => um.User).WithMany().HasForeignKey(um => um.UserId),
+            j => {
+                j.HasKey(um => new { um.UserId, um.MedalId });
+                j.ToTable("UserMedals");
+            });
 
         builder.HasIndex(x => x.PhoneNumber).IsUnique();
         builder.HasIndex(x => x.Email).IsUnique();
