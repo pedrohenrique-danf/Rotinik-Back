@@ -13,9 +13,6 @@ public class UserUpdateDtoValidator : AbstractValidator<UserUpdateDto>
 
         RuleFor(user => user.BirthDate)
             .MustBeValidBirthDate();
-
-        RuleFor(user => user.PhoneNumber)
-            .MustBeValidPhoneNumber();
             
         RuleFor(user => user.Password)
             .MustBeStrongPassword()

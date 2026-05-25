@@ -108,15 +108,11 @@ public class UserService
         if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             throw new ConflictException("Email in use.");
 
-        if (await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber))
-            throw new ConflictException("Phone number in use.");
-
         var user = new User
         {
             Name = dto.Name,
             UserName = dto.UserName,
             Email = dto.Email,
-            PhoneNumber = dto.PhoneNumber,
             BirthDate = dto.BirthDate.ToUniversalTime(),
             Password = BCrypt.Net.BCrypt.HashPassword(dto.Password)
         };
@@ -191,12 +187,8 @@ public class UserService
 
         var user = await GetUserOrThrowAsync(id);
 
-        if (user.PhoneNumber != dto.PhoneNumber && await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber))
-            throw new ConflictException("Phone number in use.");
-
         user.Name = dto.Name;
         user.BirthDate = dto.BirthDate.ToUniversalTime();
-        user.PhoneNumber = dto.PhoneNumber;
 
         if (!string.IsNullOrEmpty(dto.Password))
         {

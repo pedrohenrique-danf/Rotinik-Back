@@ -18,9 +18,6 @@ public class UserRegistrationDtoValidator : AbstractValidator<UserRegistrationDt
         RuleFor(user => user.Email)
             .MustBeValidEmail();
 
-        RuleFor(user => user.PhoneNumber)
-            .MustBeValidPhoneNumber();
-
         RuleFor(user => user.BirthDate)
             .MustBeValidBirthDate();
 
