@@ -13,10 +13,12 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
 
         builder.Property(x => x.Title)
             .IsRequired()
-            .HasMaxLength(150);
+            .HasMaxLength(TaskConstants.TitleMaxLength); 
 
-        builder.Property(x => x.Frequency)
-            .HasConversion<string>()
+        builder.Property(x => x.Description)
+            .HasMaxLength(TaskConstants.DescriptionMaxLength);
+
+        builder.Property(x => x.ExecutionTime)
             .IsRequired();
 
         builder.Property(x => x.Priority)

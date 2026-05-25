@@ -34,6 +34,13 @@ public class UserApiClient
     public async Task<HttpResponseMessage> RefreshTokenAsync(TokenDto dto)
         => await _client.PostAsJsonAsync("/api/user/refresh-token", dto);
 
+    // Novos métodos adicionados para ampliar a cobertura
+    public async Task<HttpResponseMessage> GetRankAsync(int limit = 100)
+        => await _client.GetAsync($"/api/user/rank?limit={limit}");
+
+    public async Task<HttpResponseMessage> GetPremiumContentAsync()
+        => await _client.GetAsync("/api/user/conteudo-vip");
+
     public async Task<string> LoginAndGetTokenAsync(string email, string password)
     {
         var response = await LoginAsync(new UserLoginDto { Email = email, Password = password });

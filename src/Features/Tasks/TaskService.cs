@@ -38,7 +38,8 @@ public class TaskService
         var task = new TaskItem
         {
             Title = dto.Title,
-            Frequency = dto.Frequency,
+            Description = dto.Description,
+            ExecutionTime = dto.ExecutionTime,
             Priority = dto.Priority,
             IsCompleted = false,
             CompletedAt = null,
@@ -58,9 +59,9 @@ public class TaskService
         var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
         if (task == null) throw new NotFoundException("Task not found.");
 
+        // Only Update Allowed Fields
         if (!string.IsNullOrWhiteSpace(dto.Title)) task.Title = dto.Title;
-        if (dto.Frequency.HasValue) task.Frequency = dto.Frequency.Value;
-        if (dto.Priority.HasValue) task.Priority = dto.Priority.Value;
+        if (dto.Description != null) task.Description = dto.Description;
 
         await _context.SaveChangesAsync();
     }
@@ -121,7 +122,8 @@ public class TaskService
         {
             Id = task.Id,
             Title = task.Title,
-            Frequency = task.Frequency.ToString(),
+            Description = task.Description,
+            ExecutionTime = task.ExecutionTime,
             Priority = task.Priority.ToString(),
             IsCompleted = task.IsCompleted,
             CompletedAt = task.CompletedAt,
@@ -140,7 +142,8 @@ public class TaskService
             {
                 Id = t.Id,
                 Title = t.Title,
-                Frequency = t.Frequency.ToString(),
+                Description = t.Description,
+                ExecutionTime = t.ExecutionTime,
                 Priority = t.Priority.ToString(),
                 IsCompleted = t.IsCompleted,
                 CompletedAt = t.CompletedAt,

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -29,6 +30,11 @@ public class UserTests : IntegrationTestBase
         var meJson = await meResponse.Content.ReadFromJsonAsync<JsonElement>();
         var userId = meJson.GetProperty("id").GetInt32();
 
+        // Verify entity defaults are mapped correctly to the response
+        Assert.False(meJson.GetProperty("isPremium").GetBoolean());
+        Assert.Equal(0, meJson.GetProperty("points").GetInt32());
+        Assert.Equal(0, meJson.GetProperty("coins").GetInt32());
+
         var updateResponse = await _userApi.UpdateUserAsync(userId, UserDataBuilder.CreateValidUpdateDto());
         Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
 
@@ -37,6 +43,25 @@ public class UserTests : IntegrationTestBase
 
         var loginResponse = await _userApi.LoginAsync(new() { Email = newUser.Email, Password = newUser.Password });
         Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task RegisterUser_InitializesWithDefaultValues()
+    {
+        var newUser = UserDataBuilder.CreateValidRegistrationDto();
+        await _userApi.RegisterUserAsync(newUser);
+
+        var token = await _userApi.LoginAndGetTokenAsync(newUser.Email, newUser.Password);
+        SetToken(token);
+
+        var meResponse = await _userApi.GetCurrentUserAsync();
+        Assert.Equal(HttpStatusCode.OK, meResponse.StatusCode);
+
+        var meJson = await meResponse.Content.ReadFromJsonAsync<JsonElement>();
+        
+        Assert.False(meJson.GetProperty("isPremium").GetBoolean(), "User should not be premium by default.");
+        Assert.Equal(0, meJson.GetProperty("points").GetInt32());
+        Assert.Equal(0, meJson.GetProperty("coins").GetInt32());
     }
 
     [Fact]
@@ -124,6 +149,53 @@ public class UserTests : IntegrationTestBase
         Assert.Equal(user.Name, profileData.GetProperty("name").GetString());
     }
 
+    // --- NOVOS TESTES ADICIONADOS ---
+
+    [Fact]
+    public async Task GetPublicProfile_WithInvalidUsername_ReturnsNotFound()
+    {
+        var response = await _userApi.GetPublicProfileAsync("usuario_fantasma_inexistente");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetRank_ReturnsOk_WithUserList()
+    {
+        // Arrange: Criar um usuário para garantir que o rank não esteja vazio
+        var user = UserDataBuilder.CreateValidRegistrationDto();
+        await _userApi.RegisterUserAsync(user);
+
+        // Act
+        var response = await _userApi.GetRankAsync();
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var rankData = await response.Content.ReadFromJsonAsync<List<UserRankDto>>();
+        Assert.NotNull(rankData);
+        Assert.NotEmpty(rankData);
+    }
+
+    [Fact]
+    public async Task GetPremiumContent_AsStandardUser_ReturnsForbidden()
+    {
+        // Arrange
+        var user = UserDataBuilder.CreateValidRegistrationDto();
+        await _userApi.RegisterUserAsync(user);
+        
+        var token = await _userApi.LoginAndGetTokenAsync(user.Email, user.Password);
+        SetToken(token); // Por padrão, o usuário nasce IsPremium = false
+
+        // Act
+        var response = await _userApi.GetPremiumContentAsync();
+
+        // Assert
+        // A política [Authorize(Policy = "PremiumOnly")] deve bloquear o acesso e retornar 403.
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    // --- FIM DOS NOVOS TESTES ---
+
     [Fact]
     public async Task CreateUser_WithWeakPassword()
     {
@@ -198,9 +270,11 @@ public class UserTests : IntegrationTestBase
         var getMeResponse = await _userApi.GetCurrentUserAsync();
         var updateResponse = await _userApi.UpdateUserAsync(1, UserDataBuilder.CreateValidUpdateDto());
         var deleteResponse = await _userApi.DeleteUserAsync(1);
+        var premiumResponse = await _userApi.GetPremiumContentAsync(); // O conteúdo premium também deve bloquear
 
         Assert.Equal(HttpStatusCode.Unauthorized, getMeResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, updateResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, deleteResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, premiumResponse.StatusCode);
     }
 }

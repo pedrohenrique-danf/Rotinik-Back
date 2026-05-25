@@ -10,7 +10,6 @@ public static class UserDataBuilder
         BirthDate = new DateTime(1990, 1, 1, 0, 0, 0, DateTimeKind.Utc),
         UserName = $"user_{Guid.NewGuid():N}",
         Email = $"test_{Guid.NewGuid():N}@email.com",
-        PhoneNumber = $"+55119{Random.Shared.Next(10000000, 99999999)}",
         Password = "pAssword123!"
     };
 
@@ -18,6 +17,6 @@ public static class UserDataBuilder
     {
         Name = "Updated Name",
         BirthDate = new DateTime(1995, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-        PhoneNumber = $"+55119{Random.Shared.Next(10000000, 99999999)}"
+        Password = "NewpAssword123!"
     };
 }
