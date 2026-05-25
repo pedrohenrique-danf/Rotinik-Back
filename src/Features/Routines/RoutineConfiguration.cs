@@ -19,8 +19,9 @@ public class RoutineConfiguration : IEntityTypeConfiguration<Routine>
             .IsRequired()
             .HasMaxLength(50);
 
-        builder.HasOne(x => x.IdUser)
+        builder.HasOne(x => x.User)
             .WithMany()
+            .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

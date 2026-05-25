@@ -17,13 +17,12 @@ public class RoutineService
     private async Task<Routine> GetRoutineAndVerifyAccessAsync(int id, int currentUserId, string action)
     {
         var routine = await _context.Routines
-            .Include(r => r.IdUser)
             .SingleOrDefaultAsync(r => r.Id == id);
 
         if (routine == null)
             throw new NotFoundException("Routine not found.");
 
-        if (routine.IdUser.Id != currentUserId)
+        if (routine.UserId != currentUserId)
             throw new ForbiddenException($"Forbidden: You can only {action} your own routines.");
 
         if (routine.IsDefault)
@@ -34,28 +33,18 @@ public class RoutineService
 
     public async Task<RoutineResponseDto> CreateRoutineAsync(int currentUserId, RoutineCreateDto dto)
     {
-        var user = await _context.Users.FindAsync(currentUserId);
-        if (user == null)
-            throw new NotFoundException("User not found.");
-
         var routine = new Routine
         {
             Title = dto.Title,
             Category = dto.Category,
             IsDefault = false,
-            IdUser = user
+            UserId = currentUserId
         };
 
         _context.Routines.Add(routine);
         await _context.SaveChangesAsync();
-        
-        return new RoutineResponseDto
-        {
-            Id = routine.Id,
-            Title = routine.Title,
-            Category = routine.Category,
-            IsDefault = routine.IsDefault
-        };
+
+        return routine.ToResponseDto();
     }
 
     public async Task UpdateRoutineAsync(int id, int currentUserId, RoutineUpdateDto dto)
@@ -83,7 +72,7 @@ public class RoutineService
     {
         return await _context.Routines
             .AsNoTracking()
-            .Where(r => r.IdUser.Id == currentUserId)
+            .Where(r => r.UserId == currentUserId)
             .Select(r => new RoutineResponseDto
             {
                 Id = r.Id,

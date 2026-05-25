@@ -25,10 +25,10 @@ public class RoutineController : ControllerBase
     public async Task<IActionResult> CreateRoutine(RoutineCreateDto dto)
     {
         var currentUserId = User.GetCurrentUserId();
-        
+
         var result = await _routineService.CreateRoutineAsync(currentUserId, dto);
-        
-        return StatusCode(201, new { data = result, message = "Routine created." });
+
+        return CreatedAtAction(nameof(GetUserRoutines), new { id = result.Id }, new { data = result, message = "Routine created." });
     }
 
     [HttpPut("{id}")]
@@ -63,7 +63,7 @@ public class RoutineController : ControllerBase
     {
         var currentUserId = User.GetCurrentUserId();
         var routines = await _routineService.GetUserRoutinesAsync(currentUserId);
-        
+
         return Ok(new { data = routines });
     }
 }
