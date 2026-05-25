@@ -3,6 +3,7 @@ using Rotinik.Features.Payments;
 using Rotinik.Features.Routines;
 using Rotinik.Features.Users;
 using Rotinik.Features.Medals;
+using Rotinik.Features.Statistics;
 
 namespace Rotinik.Core.Data;
 
@@ -17,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<Rotinik.Features.Tasks.TaskItem> Tasks { get; set; }
     public DbSet<Medal> Medals { get; set; }
     public DbSet<UserMedal> UserMedals { get; set; }
+    public DbSet<DailyUserSummary> DailyUserSummaries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

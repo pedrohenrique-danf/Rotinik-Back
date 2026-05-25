@@ -41,6 +41,7 @@ public class TaskService
             Frequency = dto.Frequency,
             Priority = dto.Priority,
             IsCompleted = false,
+            CompletedAt = null,
             RoutineId = routineId
         };
 
@@ -90,19 +91,24 @@ public class TaskService
         if (!task.IsCompleted)
         {
             task.IsCompleted = true;
+            task.CompletedAt = DateTime.UtcNow;
+            
             user.Points += 10;
             user.Coins += 5;
             
-            // Save state FIRST so the MedalService reads the updated points and completed tasks count
             await _context.SaveChangesAsync();
 
-            // TRIGGER MEDAL EVALUATIONS
             newlyUnlockedMedals.AddRange(await _medalService.EvaluateMedalsAsync(currentUserId, MedalTriggerType.TasksCompleted));
             newlyUnlockedMedals.AddRange(await _medalService.EvaluateMedalsAsync(currentUserId, MedalTriggerType.TotalPoints));
         }
         else
         {
             task.IsCompleted = false;
+            task.CompletedAt = null;
+            
+            user.Points = Math.Max(0, user.Points - 10);
+            user.Coins = Math.Max(0, user.Coins - 5);
+            
             await _context.SaveChangesAsync();
         }
 
@@ -118,6 +124,7 @@ public class TaskService
             Frequency = task.Frequency.ToString(),
             Priority = task.Priority.ToString(),
             IsCompleted = task.IsCompleted,
+            CompletedAt = task.CompletedAt,
             RoutineId = task.RoutineId
         };
     }
@@ -136,6 +143,7 @@ public class TaskService
                 Frequency = t.Frequency.ToString(),
                 Priority = t.Priority.ToString(),
                 IsCompleted = t.IsCompleted,
+                CompletedAt = t.CompletedAt,
                 RoutineId = t.RoutineId
             })
             .ToListAsync();

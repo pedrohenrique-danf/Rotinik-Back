@@ -9,6 +9,8 @@ public class TaskItem
     public TaskFrequency Frequency { get; set; }
     public TaskPriority Priority { get; set; }
     public bool IsCompleted { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    
     public int RoutineId { get; set; }
     public Routine Routine { get; set; } = null!;
 }

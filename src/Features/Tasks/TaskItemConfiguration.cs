@@ -26,6 +26,9 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.Property(x => x.IsCompleted)
             .HasDefaultValue(false);
 
+        builder.Property(x => x.CompletedAt)
+            .IsRequired(false);
+
         builder.HasOne(x => x.Routine)
             .WithMany(r => r.Tasks)
             .HasForeignKey(x => x.RoutineId)

@@ -7,5 +7,6 @@ public class TaskResponseDto
     public string Frequency { get; set; } = string.Empty;
     public string Priority { get; set; } = string.Empty;
     public bool IsCompleted { get; set; }
+    public DateTime? CompletedAt { get; set; }
     public int RoutineId { get; set; }
 }
