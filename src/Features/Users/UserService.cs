@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Rotinik.Core.Exceptions;
 using Rotinik.Core.Data;
 using Rotinik.Features.Users.DTOs;
-using System.Security.Claims;
+using Rotinik.Features.Users.Auth;
 using Rotinik.Features.Routines;
 using Rotinik.Core.Extensions;
 
@@ -12,11 +13,28 @@ public class UserService
 {
     private readonly AppDbContext _context;
     private readonly TokenService _tokenService;
+    private readonly PasswordHasher _passwordHasher;
+    private readonly IMemoryCache _cache;
 
-    public UserService(AppDbContext context, TokenService tokenService)
+    public UserService(
+        AppDbContext context, 
+        TokenService tokenService, 
+        PasswordHasher passwordHasher, 
+        IMemoryCache cache)
     {
         _context = context;
         _tokenService = tokenService;
+        _passwordHasher = passwordHasher;
+        _cache = cache;
+    }
+
+    private async Task<User> GetUserOrThrowAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new NotFoundException("User not found.");
+
+        return user;
     }
 
     public async Task<TokenDto> LoginAsync(UserLoginDto dto)
@@ -24,8 +42,8 @@ public class UserService
         var user = await _context.Users
             .Include(u => u.RefreshTokens)
             .SingleOrDefaultAsync(u => u.Email == dto.Email);
-        
-        if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
+
+        if (user == null || !_passwordHasher.VerifyPassword(dto.Password, user.Password))
             throw new UnauthorizedException("Invalid email or password.");
 
         var tokenPair = GenerateAndAssignTokens(user);
@@ -37,7 +55,7 @@ public class UserService
     public async Task<TokenDto> RefreshTokenAsync(TokenDto dto)
     {
         var principal = _tokenService.GetPrincipalFromExpiredToken(dto.AccessToken);
-        var userId = principal.GetCurrentUserId(); 
+        var userId = principal.GetCurrentUserId();
 
         var user = await _context.Users
             .Include(u => u.RefreshTokens)
@@ -46,10 +64,10 @@ public class UserService
         if (user == null)
             throw new UnauthorizedException("Invalid user.");
 
-        var incomingTokenHash = _tokenService.HashToken(dto.RefreshToken);
-        
-        var activeSession = user.RefreshTokens.FirstOrDefault(rt => 
-            rt.TokenHash == incomingTokenHash && rt.ExpiryTime > DateTime.UtcNow);
+        var incomingToken = dto.RefreshToken;
+
+        var activeSession = user.RefreshTokens.FirstOrDefault(rt =>
+            rt.Token == incomingToken && rt.ExpiryTime > DateTime.UtcNow);
 
         if (activeSession == null)
             throw new UnauthorizedException("Invalid refresh token.");
@@ -66,7 +84,6 @@ public class UserService
     {
         var accessToken = _tokenService.GenerateJwtToken(user);
         var refreshToken = _tokenService.GenerateRefreshToken();
-        var refreshTokenHash = _tokenService.HashToken(refreshToken);
 
         var expiredTokens = user.RefreshTokens.Where(rt => rt.ExpiryTime <= DateTime.UtcNow).ToList();
         foreach (var token in expiredTokens)
@@ -76,7 +93,7 @@ public class UserService
 
         user.RefreshTokens.Add(new UserRefreshToken
         {
-            TokenHash = refreshTokenHash,
+            Token = refreshToken,
             ExpiryTime = DateTime.UtcNow.AddDays(7)
         });
 
@@ -90,7 +107,7 @@ public class UserService
 
         if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             throw new ConflictException("Email in use.");
-        
+
         if (await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber))
             throw new ConflictException("Phone number in use.");
 
@@ -101,18 +118,18 @@ public class UserService
             Email = dto.Email,
             PhoneNumber = dto.PhoneNumber,
             BirthDate = dto.BirthDate.ToUniversalTime(),
-            Password = BCrypt.Net.BCrypt.HashPassword(dto.Password)
+            Password = _passwordHasher.HashPassword(dto.Password)
         };
 
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
 
-        var defaultRoutine = new Routine 
-        { 
+        var defaultRoutine = new Routine
+        {
             Title = "Inbox",
             Category = "System",
             IsDefault = true,
-            IdUser = user 
+            IdUser = user
         };
         await _context.Routines.AddAsync(defaultRoutine);
         await _context.SaveChangesAsync();
@@ -121,7 +138,7 @@ public class UserService
     public async Task<UserProfileDto?> GetPublicProfileAsync(string username)
     {
         var user = await _context.Users.SingleOrDefaultAsync(u => u.UserName == username);
-        if (user == null) 
+        if (user == null)
             throw new NotFoundException("User not found.");
 
         var rankPosition = await CalculateUserRankAsync(user.Points);
@@ -138,10 +155,7 @@ public class UserService
 
     public async Task<UserResponseDto?> GetCurrentUserAsync(int userId)
     {
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null) 
-            throw new NotFoundException("User not found.");
-
+        var user = await GetUserOrThrowAsync(userId);
         var rankPosition = await CalculateUserRankAsync(user.Points);
 
         return new UserResponseDto
@@ -160,7 +174,13 @@ public class UserService
 
     private async Task<int> CalculateUserRankAsync(int userPoints)
     {
-        return await _context.Users.CountAsync(u => u.Points > userPoints) + 1;
+        var cacheKey = $"UserRank_{userPoints}";
+        
+        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
+            return await _context.Users.CountAsync(u => u.Points > userPoints) + 1;
+        });
     }
 
     public async Task UpdateUserAsync(int id, int currentUserId, UserUpdateDto dto)
@@ -168,9 +188,7 @@ public class UserService
         if (currentUserId != id)
             throw new ForbiddenException("Forbidden: You can only update your own profile.");
 
-        var user = await _context.Users.FindAsync(id);
-        if (user == null) 
-            throw new NotFoundException("User not found.");
+        var user = await GetUserOrThrowAsync(id);
 
         if (user.PhoneNumber != dto.PhoneNumber && await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber))
             throw new ConflictException("Phone number in use.");
@@ -178,10 +196,10 @@ public class UserService
         user.Name = dto.Name;
         user.BirthDate = dto.BirthDate.ToUniversalTime();
         user.PhoneNumber = dto.PhoneNumber;
-        
+
         if (!string.IsNullOrEmpty(dto.Password))
         {
-            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            user.Password = _passwordHasher.HashPassword(dto.Password);
         }
 
         await _context.SaveChangesAsync();
@@ -192,9 +210,7 @@ public class UserService
         if (currentUserId != id)
             throw new ForbiddenException("Forbidden: You can only delete your own profile.");
 
-        var user = await _context.Users.FindAsync(id);
-        if (user == null) 
-            throw new NotFoundException("User not found.");
+        var user = await GetUserOrThrowAsync(id);
 
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
@@ -202,10 +218,7 @@ public class UserService
 
     public async Task ActivatePremiumAsync(int currentUserId)
     {
-        var user = await _context.Users.FindAsync(currentUserId);
-        
-        if (user == null)
-            throw new NotFoundException("User not found.");
+        var user = await GetUserOrThrowAsync(currentUserId);
 
         if (user.IsPremium)
             throw new ConflictException("Your account is already Premium.");
@@ -220,11 +233,11 @@ public class UserService
             .AsNoTracking()
             .OrderByDescending(u => u.Points)
             .Take(limit)
-            .Select(u => new 
-            { 
-                u.UserName, 
-                u.Points, 
-                u.IsPremium 
+            .Select(u => new
+            {
+                u.UserName,
+                u.Points,
+                u.IsPremium
             })
             .ToListAsync();
 

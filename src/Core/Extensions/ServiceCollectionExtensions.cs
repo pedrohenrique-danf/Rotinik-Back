@@ -103,6 +103,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddControllers();
         
+        services.AddMemoryCache(); 
+        
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -116,6 +118,14 @@ public static class ServiceCollectionExtensions
         foreach (var type in serviceTypes)
         {
             services.AddScoped(type);
+        }
+
+        var hasherType = assembly.GetTypes()
+            .FirstOrDefault(t => t.Name == "PasswordHasher");
+            
+        if (hasherType != null)
+        {
+            services.AddScoped(hasherType);
         }
 
         return services;
