@@ -17,25 +17,38 @@ public class MedalService
     {
         return await _context.Set<UserMedal>()
             .AsNoTracking()
-            .Include(um => um.Medal)
             .Where(um => um.UserId == userId)
             .OrderByDescending(um => um.AchievedAt)
-            .Select(um => new UserMedalResponseDto
-            {
-                AchievedAt = um.AchievedAt,
-                Medal = new MedalResponseDto
-                {
-                    Id = um.Medal.Id,
-                    Name = um.Medal.Name,
-                    Description = um.Medal.Description,
-                    IconUrl = um.Medal.IconUrl,
-                    PointsThreshold = um.Medal.PointsThreshold
-                }
-            })
+            .MapToUserMedalDto()
             .ToListAsync();
     }
 
-    public async Task CheckAndAwardMedalsAsync(int userId, int currentUserPoints)
+    public async Task<List<MedalResponseDto>> GetAllMedalsAsync()
+    {
+        return await _context.Medals
+            .AsNoTracking()
+            .OrderBy(m => m.PointsThreshold)
+            .MapToMedalDto()
+            .ToListAsync();
+    }
+
+    public async Task<MedalProgressDto> GetNextMedalProgressAsync(int currentUserPoints)
+    {
+        var nextMedal = await _context.Medals
+            .AsNoTracking()
+            .Where(m => m.PointsThreshold > currentUserPoints)
+            .OrderBy(m => m.PointsThreshold)
+            .MapToMedalDto()
+            .FirstOrDefaultAsync();
+
+        return new MedalProgressDto
+        {
+            NextMedal = nextMedal,
+            PointsNeeded = nextMedal != null ? nextMedal.PointsThreshold - currentUserPoints : 0
+        };
+    }
+
+    public async Task<List<MedalResponseDto>> CheckAndAwardMedalsAsync(int userId, int currentUserPoints)
     {
         var existingMedalIds = await _context.Set<UserMedal>()
             .Where(um => um.UserId == userId)
@@ -47,16 +60,24 @@ public class MedalService
             .ToListAsync();
 
         if (!eligibleMedals.Any())
-            return;
+            return new List<MedalResponseDto>();
 
         var userMedalsToAdd = eligibleMedals.Select(m => new UserMedal
         {
             UserId = userId,
-            MedalId = m.Id,
-            AchievedAt = DateTime.UtcNow
+            MedalId = m.Id
         });
 
         await _context.Set<UserMedal>().AddRangeAsync(userMedalsToAdd);
         await _context.SaveChangesAsync();
+
+        return eligibleMedals.Select(m => new MedalResponseDto
+        {
+            Id = m.Id,
+            Name = m.Name,
+            Description = m.Description,
+            IconUrl = m.IconUrl,
+            PointsThreshold = m.PointsThreshold
+        }).ToList();
     }
 }
