@@ -61,24 +61,25 @@ public class MedalTests : IntegrationTestBase
     {
         var userId = await SetupUserAsync();
 
-        using var scope = Factory.Services.CreateScope(); 
+        using var scope = Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var medalService = scope.ServiceProvider.GetRequiredService<MedalService>();
 
-        var medal = new Medal 
-        { 
-            Name = "Iniciante", 
-            Description = "Atingiu 100 pontos!", 
-            PointsThreshold = 100, 
-            IconUrl = "http://icon.com/iniciante.png" 
+        var medal = new Medal
+        {
+            Name = "Iniciante",
+            Description = "Atingiu 100 pontos!",
+            TargetValue = 100,
+            TriggerType = MedalTriggerType.TotalPoints,
+            IconUrl = "http://icon.com/iniciante.png"
         };
         db.Medals.Add(medal);
-        
+
         var user = await db.Users.FindAsync(userId);
-        user!.Points = 150; 
+        user!.Points = 150;
         await db.SaveChangesAsync();
 
-        await medalService.CheckAndAwardMedalsAsync(userId, user.Points);
+        await medalService.EvaluateMedalsAsync(userId, MedalTriggerType.TotalPoints);
 
         var response = await _medalApi.GetMyMedalsAsync();
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -99,19 +100,20 @@ public class MedalTests : IntegrationTestBase
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var medalService = scope.ServiceProvider.GetRequiredService<MedalService>();
 
-        db.Medals.Add(new Medal { Name = "Prata", PointsThreshold = 200, Description = "Desc", IconUrl = "Url" });
-        
+        // Replaced PointsThreshold and added TriggerType
+        db.Medals.Add(new Medal { Name = "Prata", TargetValue = 200, TriggerType = MedalTriggerType.TotalPoints, Description = "Desc", IconUrl = "Url" });
+
         var user = await db.Users.FindAsync(userId);
-        user!.Points = 250; 
+        user!.Points = 250;
         await db.SaveChangesAsync();
 
-        await medalService.CheckAndAwardMedalsAsync(userId, user.Points);
-        await medalService.CheckAndAwardMedalsAsync(userId, user.Points);
+        await medalService.EvaluateMedalsAsync(userId, MedalTriggerType.TotalPoints);
+        await medalService.EvaluateMedalsAsync(userId, MedalTriggerType.TotalPoints);
 
         var response = await _medalApi.GetMyMedalsAsync();
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         var medals = json.GetProperty("data").EnumerateArray().ToList();
 
-        Assert.Single(medals); 
+        Assert.Single(medals);
     }
 }

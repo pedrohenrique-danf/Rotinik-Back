@@ -58,7 +58,7 @@ public class TaskTests : IntegrationTestBase
         Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
 
         var toggleResponse = await _taskApi.ToggleCompletionAsync(routineId, taskId);
-        Assert.Equal(HttpStatusCode.NoContent, toggleResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, toggleResponse.StatusCode);
 
         var deleteResponse = await _taskApi.DeleteTaskAsync(routineId, taskId);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);

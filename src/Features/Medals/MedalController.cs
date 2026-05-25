@@ -40,14 +40,14 @@ public class MedalController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetNextMedalProgress([FromQuery] int currentUserPoints) 
+    public async Task<IActionResult> GetNextMedalProgress([FromQuery] int currentValue, [FromQuery] MedalTriggerType triggerType) 
     {
-        if (currentUserPoints < 0)
+        if (currentValue < 0)
         {
-            return BadRequest(new { message = "Current user points cannot be negative." });
+            return BadRequest(new { message = "Current value cannot be negative." });
         }
 
-        var progress = await _medalService.GetNextMedalProgressAsync(currentUserPoints);
+        var progress = await _medalService.GetNextMedalProgressAsync(currentValue, triggerType);
         return Ok(new { data = progress });
     }
 }

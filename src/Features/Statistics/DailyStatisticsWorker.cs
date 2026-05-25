@@ -51,7 +51,7 @@ public class DailyStatisticsWorker : BackgroundService
 
         var tasksStats = await dbContext.Tasks
             .Where(t => t.CompletedAt >= targetDate && t.CompletedAt < targetDate.AddDays(1) && t.IsCompleted)
-            .GroupBy(t => t.UserId)
+            .GroupBy(t => t.Routine.UserId)
             .Select(g => new { UserId = g.Key, TasksCompleted = g.Count() })
             .ToListAsync(stoppingToken);
 
