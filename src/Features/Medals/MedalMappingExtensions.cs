@@ -15,7 +15,8 @@ public static class MedalMappingExtensions
                 Name = um.Medal.Name,
                 Description = um.Medal.Description,
                 IconUrl = um.Medal.IconUrl,
-                PointsThreshold = um.Medal.PointsThreshold
+                TriggerType = um.Medal.TriggerType,
+                TargetValue = um.Medal.TargetValue
             }
         });
     }
@@ -28,7 +29,8 @@ public static class MedalMappingExtensions
             Name = m.Name,
             Description = m.Description,
             IconUrl = m.IconUrl,
-            PointsThreshold = m.PointsThreshold
+            TriggerType = m.TriggerType,
+            TargetValue = m.TargetValue
         });
     }
 }

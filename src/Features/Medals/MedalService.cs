@@ -27,57 +27,86 @@ public class MedalService
     {
         return await _context.Medals
             .AsNoTracking()
-            .OrderBy(m => m.PointsThreshold)
+            .OrderBy(m => m.TriggerType)
+            .ThenBy(m => m.TargetValue)
             .MapToMedalDto()
             .ToListAsync();
     }
 
-    public async Task<MedalProgressDto> GetNextMedalProgressAsync(int currentUserPoints)
+    public async Task<MedalProgressDto> GetNextMedalProgressAsync(int currentValue, MedalTriggerType triggerType)
     {
         var nextMedal = await _context.Medals
             .AsNoTracking()
-            .Where(m => m.PointsThreshold > currentUserPoints)
-            .OrderBy(m => m.PointsThreshold)
+            .Where(m => m.TriggerType == triggerType && m.TargetValue > currentValue)
+            .OrderBy(m => m.TargetValue)
             .MapToMedalDto()
             .FirstOrDefaultAsync();
 
         return new MedalProgressDto
         {
             NextMedal = nextMedal,
-            PointsNeeded = nextMedal != null ? nextMedal.PointsThreshold - currentUserPoints : 0
+            TargetNeeded = nextMedal != null ? nextMedal.TargetValue - currentValue : 0
         };
     }
 
-    public async Task<List<MedalResponseDto>> CheckAndAwardMedalsAsync(int userId, int currentUserPoints)
+    public async Task<List<MedalResponseDto>> EvaluateMedalsAsync(int userId, MedalTriggerType trigger)
     {
         var existingMedalIds = await _context.Set<UserMedal>()
             .Where(um => um.UserId == userId)
             .Select(um => um.MedalId)
             .ToListAsync();
 
-        var eligibleMedals = await _context.Medals
-            .Where(m => m.PointsThreshold <= currentUserPoints && !existingMedalIds.Contains(m.Id))
+        var candidateMedals = await _context.Medals
+            .AsNoTracking()
+            .Where(m => m.TriggerType == trigger && !existingMedalIds.Contains(m.Id))
             .ToListAsync();
 
-        if (!eligibleMedals.Any())
-            return new List<MedalResponseDto>();
+        if (!candidateMedals.Any())
+            return new List<MedalResponseDto>(); 
 
-        var userMedalsToAdd = eligibleMedals.Select(m => new UserMedal
+        var medalsWon = new List<Medal>();
+
+        switch (trigger)
         {
-            UserId = userId,
-            MedalId = m.Id
-        });
+            case MedalTriggerType.TasksCompleted:
+                var completedTasksCount = await _context.Tasks
+                    .CountAsync(t => t.Routine.UserId == userId && t.IsCompleted); 
+                
+                medalsWon.AddRange(candidateMedals.Where(m => completedTasksCount >= m.TargetValue));
+                break;
 
-        await _context.Set<UserMedal>().AddRangeAsync(userMedalsToAdd);
-        await _context.SaveChangesAsync();
+            case MedalTriggerType.RoutineStreak:
+                var currentStreak = await GetUserCurrentStreakAsync(userId);
+                medalsWon.AddRange(candidateMedals.Where(m => currentStreak >= m.TargetValue));
+                break;
 
-        return eligibleMedals.Select(m => new MedalResponseDto
+            case MedalTriggerType.TotalPoints:
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    medalsWon.AddRange(candidateMedals.Where(m => user.Points >= m.TargetValue));
+                }
+                break;
+        }
+
+        if (medalsWon.Any())
         {
-            Id = m.Id,
-            Name = m.Name,
-            Description = m.Description,
-            IconUrl = m.IconUrl,
-            PointsThreshold = m.PointsThreshold
-        }).ToList();
+            var userMedalsToAdd = medalsWon.Select(m => new UserMedal
+            {
+                UserId = userId,
+                MedalId = m.Id,
+                AchievedAt = DateTime.UtcNow
+            });
+
+            await _context.Set<UserMedal>().AddRangeAsync(userMedalsToAdd);
+            await _context.SaveChangesAsync();
+        }
+
+        return medalsWon.AsQueryable().MapToMedalDto().ToList();
+    }
+
+    private async Task<int> GetUserCurrentStreakAsync(int userId)
+    {
+        return await Task.FromResult(0);
     }
 }

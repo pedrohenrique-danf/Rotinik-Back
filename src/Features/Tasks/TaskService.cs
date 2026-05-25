@@ -2,16 +2,20 @@ using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
 using Rotinik.Core.Data;
 using Rotinik.Features.Tasks.DTOs;
+using Rotinik.Features.Medals;
+using Rotinik.Features.Medals.DTOs;
 
 namespace Rotinik.Features.Tasks;
 
 public class TaskService
 {
     private readonly AppDbContext _context;
+    private readonly MedalService _medalService;
 
-    public TaskService(AppDbContext context)
+    public TaskService(AppDbContext context, MedalService medalService)
     {
         _context = context;
+        _medalService = medalService;
     }
 
     private async Task VerifyRoutineOwnershipAsync(int routineId, int currentUserId)
@@ -71,7 +75,7 @@ public class TaskService
         await _context.SaveChangesAsync();
     }
 
-    public async Task ToggleTaskCompletionAsync(int routineId, int taskId, int currentUserId)
+    public async Task<List<MedalResponseDto>> ToggleTaskCompletionAsync(int routineId, int taskId, int currentUserId)
     {
         await VerifyRoutineOwnershipAsync(routineId, currentUserId);
 
@@ -81,18 +85,28 @@ public class TaskService
         var user = await _context.Users.FindAsync(currentUserId);
         if (user == null) throw new NotFoundException("User not found.");
 
+        var newlyUnlockedMedals = new List<MedalResponseDto>();
+
         if (!task.IsCompleted)
         {
             task.IsCompleted = true;
             user.Points += 10;
             user.Coins += 5;
+            
+            // Save state FIRST so the MedalService reads the updated points and completed tasks count
+            await _context.SaveChangesAsync();
+
+            // TRIGGER MEDAL EVALUATIONS
+            newlyUnlockedMedals.AddRange(await _medalService.EvaluateMedalsAsync(currentUserId, MedalTriggerType.TasksCompleted));
+            newlyUnlockedMedals.AddRange(await _medalService.EvaluateMedalsAsync(currentUserId, MedalTriggerType.TotalPoints));
         }
         else
         {
             task.IsCompleted = false;
+            await _context.SaveChangesAsync();
         }
 
-        await _context.SaveChangesAsync();
+        return newlyUnlockedMedals;
     }
 
     private static TaskResponseDto MapToResponse(TaskItem task)

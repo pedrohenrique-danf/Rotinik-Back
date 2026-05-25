@@ -13,6 +13,8 @@ public class MedalConfiguration : IEntityTypeConfiguration<Medal>
         builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
         builder.Property(x => x.Description).IsRequired().HasMaxLength(255);
         builder.Property(x => x.IconUrl).IsRequired().HasMaxLength(500);
-        builder.Property(x => x.PointsThreshold).IsRequired();
+        
+        builder.Property(x => x.TriggerType).IsRequired();
+        builder.Property(x => x.TargetValue).IsRequired();
     }
 }

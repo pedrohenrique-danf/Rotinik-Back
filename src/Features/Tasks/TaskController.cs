@@ -53,14 +53,16 @@ public class TaskController : ControllerBase
     }
 
     [HttpPatch("{taskId}/toggle")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ToggleCompletion(int routineId, int taskId)
     {
         var currentUserId = User.GetCurrentUserId();
-        await _taskService.ToggleTaskCompletionAsync(routineId, taskId, currentUserId);
-        return NoContent();
+        
+        var unlockedMedals = await _taskService.ToggleTaskCompletionAsync(routineId, taskId, currentUserId);
+        
+        return Ok(new { data = new { newlyUnlockedMedals = unlockedMedals } });
     }
 
     [HttpGet]
