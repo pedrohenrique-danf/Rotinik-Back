@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Exceptions;
 using Rotinik.Core.Data;
-using Rotinik.Features.Tasks.DTOs; // Atualizado o Namespace
+using Rotinik.Features.Tasks.DTOs;
 
 namespace Rotinik.Features.Tasks;
 
@@ -16,12 +16,14 @@ public class TaskService
 
     private async Task VerifyRoutineOwnershipAsync(int routineId, int currentUserId)
     {
-        var routine = await _context.Routines.Include(r => r.IdUser).SingleOrDefaultAsync(r => r.Id == routineId);
-        
+        var routine = await _context.Routines
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.Id == routineId);
+
         if (routine == null)
             throw new NotFoundException("Routine not found.");
 
-        if (routine.IdUser.Id != currentUserId)
+        if (routine.UserId != currentUserId)
             throw new ForbiddenException("Forbidden: You can only modify tasks in your own routines.");
     }
 
@@ -112,7 +114,7 @@ public class TaskService
 
         return await _context.Tasks
             .Where(t => t.RoutineId == routineId)
-            .OrderBy(t => t.IsCompleted) 
+            .OrderBy(t => t.IsCompleted)
             .Select(t => new TaskResponseDto
             {
                 Id = t.Id,

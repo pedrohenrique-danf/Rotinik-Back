@@ -118,7 +118,7 @@ public class UserService
             Email = dto.Email,
             PhoneNumber = dto.PhoneNumber,
             BirthDate = dto.BirthDate.ToUniversalTime(),
-            Password = _passwordHasher.HashPassword(dto.Password)
+            Password = BCrypt.Net.BCrypt.HashPassword(dto.Password)
         };
 
         await _context.Users.AddAsync(user);
@@ -129,8 +129,9 @@ public class UserService
             Title = "Inbox",
             Category = "System",
             IsDefault = true,
-            IdUser = user
+            UserId = user.Id
         };
+        
         await _context.Routines.AddAsync(defaultRoutine);
         await _context.SaveChangesAsync();
     }
