@@ -76,7 +76,7 @@ public class MedalTests : IntegrationTestBase
         db.Medals.Add(medal);
 
         var user = await db.Users.FindAsync(userId);
-        user!.Points = 150;
+        user!.Xp = 150;
         await db.SaveChangesAsync();
 
         await medalService.EvaluateMedalsAsync(userId, MedalTriggerType.TotalPoints);
@@ -104,7 +104,7 @@ public class MedalTests : IntegrationTestBase
         db.Medals.Add(new Medal { Name = "Prata", TargetValue = 200, TriggerType = MedalTriggerType.TotalPoints, Description = "Desc", IconUrl = "Url" });
 
         var user = await db.Users.FindAsync(userId);
-        user!.Points = 250;
+        user!.Xp = 250;
         await db.SaveChangesAsync();
 
         await medalService.EvaluateMedalsAsync(userId, MedalTriggerType.TotalPoints);

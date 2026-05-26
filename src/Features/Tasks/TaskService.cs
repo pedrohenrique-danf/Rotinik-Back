@@ -94,7 +94,7 @@ public class TaskService
             task.IsCompleted = true;
             task.CompletedAt = DateTime.UtcNow;
             
-            user.Points += 10;
+            user.Xp += 10;
             user.Coins += 5;
             
             await _context.SaveChangesAsync();
@@ -107,7 +107,7 @@ public class TaskService
             task.IsCompleted = false;
             task.CompletedAt = null;
             
-            user.Points = Math.Max(0, user.Points - 10);
+            user.Xp = Math.Max(0, user.Xp - 10);
             user.Coins = Math.Max(0, user.Coins - 5);
             
             await _context.SaveChangesAsync();

@@ -34,7 +34,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasDefaultValue(false);
         
-        builder.Property(x => x.Points)
+        builder.Property(x => x.Xp)
             .IsRequired()
             .HasDefaultValue(0);
 

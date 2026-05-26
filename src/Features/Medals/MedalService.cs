@@ -84,7 +84,7 @@ public class MedalService
                 var user = await _context.Users.FindAsync(userId);
                 if (user != null)
                 {
-                    medalsWon.AddRange(candidateMedals.Where(m => user.Points >= m.TargetValue));
+                    medalsWon.AddRange(candidateMedals.Where(m => user.Xp >= m.TargetValue));
                 }
                 break;
         }

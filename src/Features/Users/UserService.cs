@@ -113,7 +113,7 @@ public class UserService
             Name = dto.Name,
             UserName = dto.UserName,
             Email = dto.Email,
-            BirthDate = dto.BirthDate.ToUniversalTime(),
+            BirthDate = dto.BirthDate,
             Password = BCrypt.Net.BCrypt.HashPassword(dto.Password)
         };
 
@@ -138,13 +138,13 @@ public class UserService
         if (user == null)
             throw new NotFoundException("User not found.");
 
-        var rankPosition = await CalculateUserRankAsync(user.Points);
+        var rankPosition = await CalculateUserRankAsync(user.Xp);
 
         return new UserProfileDto
         {
             Name = user.Name,
             UserName = user.UserName,
-            Points = user.Points,
+            Xp = user.Xp,
             IsPremium = user.IsPremium,
             RankPosition = rankPosition
         };
@@ -153,7 +153,7 @@ public class UserService
     public async Task<UserResponseDto?> GetCurrentUserAsync(int userId)
     {
         var user = await GetUserOrThrowAsync(userId);
-        var rankPosition = await CalculateUserRankAsync(user.Points);
+        var rankPosition = await CalculateUserRankAsync(user.Xp);
 
         return new UserResponseDto
         {
@@ -162,21 +162,21 @@ public class UserService
             UserName = user.UserName,
             Email = user.Email,
             BirthDate = user.BirthDate,
-            Points = user.Points,
+            Xp = user.Xp,
             Coins = user.Coins,
             IsPremium = user.IsPremium,
             RankPosition = rankPosition
         };
     }
 
-    private async Task<int> CalculateUserRankAsync(int userPoints)
+    private async Task<int> CalculateUserRankAsync(int userXp)
     {
-        var cacheKey = $"UserRank_{userPoints}";
+        var cacheKey = $"UserRank_{userXp}";
         
         return await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return await _context.Users.CountAsync(u => u.Points > userPoints) + 1;
+            return await _context.Users.CountAsync(u => u.Xp > userXp) + 1;
         });
     }
 
@@ -188,7 +188,7 @@ public class UserService
         var user = await GetUserOrThrowAsync(id);
 
         user.Name = dto.Name;
-        user.BirthDate = dto.BirthDate.ToUniversalTime();
+        user.BirthDate = dto.BirthDate; // Removed .ToUniversalTime()
 
         if (!string.IsNullOrEmpty(dto.Password))
         {
@@ -224,12 +224,12 @@ public class UserService
     {
         var topUsers = await _context.Users
             .AsNoTracking()
-            .OrderByDescending(u => u.Points)
+            .OrderByDescending(u => u.Xp)
             .Take(limit)
             .Select(u => new
             {
                 u.UserName,
-                u.Points,
+                u.Xp,
                 u.IsPremium
             })
             .ToListAsync();
@@ -238,7 +238,7 @@ public class UserService
         {
             RankPosition = index + 1,
             UserName = u.UserName,
-            Points = u.Points,
+            Xp = u.Xp,
             IsPremium = u.IsPremium
         }).ToList();
     }
