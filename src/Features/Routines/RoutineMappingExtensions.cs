@@ -1,5 +1,4 @@
 using Rotinik.Features.Routines.DTOs;
-using Rotinik.Features.Tasks.DTOs;
 
 namespace Rotinik.Features.Routines;
 
@@ -11,23 +10,10 @@ public static class RoutineMappingExtensions
         {
             Id = routine.Id,
             Title = routine.Title,
-            Description = routine.Description,
             Category = routine.Category,
+            Description = routine.Description,
             Frequency = routine.Frequency,
-            IsDefault = routine.IsDefault,
-            CreatedAt = routine.CreatedAt,
-            Tasks = routine.Tasks.Select(t => new TaskResponseDto
-            {
-                Id = t.Id,
-                Title = t.Title,
-                Description = t.Description,
-                IsCompleted = t.IsCompleted,
-                XpReward = t.XpReward,
-                CoinReward = t.CoinReward,
-                Order = t.Order,
-                CompletedAt = t.CompletedAt,
-                RoutineId = t.RoutineId
-            }).OrderBy(t => t.Order).ToList()
+            IsDefault = routine.IsDefault
         };
     }
 }

@@ -22,7 +22,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         {
             Status = httpContext.Response.StatusCode,
             Title = exception is BaseAppException ? "Business Rule Violation" : "Internal Server Error",
-            Detail = exception is BaseAppException ? exception.Message : exception.ToString()
+            Detail = exception is BaseAppException ? exception.Message : "An unexpected error occurred."
         };
 
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);

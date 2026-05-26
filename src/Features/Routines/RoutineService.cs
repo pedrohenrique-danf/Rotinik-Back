@@ -17,7 +17,6 @@ public class RoutineService
     private async Task<Routine> GetRoutineAndVerifyAccessAsync(int id, int currentUserId, string action)
     {
         var routine = await _context.Routines
-            .Include(r => r.Tasks)
             .SingleOrDefaultAsync(r => r.Id == id);
 
         if (routine == null)
@@ -37,8 +36,8 @@ public class RoutineService
         var routine = new Routine
         {
             Title = dto.Title,
-            Description = dto.Description,
             Category = dto.Category,
+            Description = dto.Description,
             Frequency = dto.Frequency,
             IsDefault = false,
             UserId = currentUserId
@@ -59,10 +58,10 @@ public class RoutineService
 
         if (!string.IsNullOrWhiteSpace(dto.Category))
             routine.Category = dto.Category;
-
-        if (dto.Description != null)
+            
+        if (!string.IsNullOrWhiteSpace(dto.Description))
             routine.Description = dto.Description;
-
+            
         if (!string.IsNullOrWhiteSpace(dto.Frequency))
             routine.Frequency = dto.Frequency;
 
@@ -79,12 +78,18 @@ public class RoutineService
 
     public async Task<List<RoutineResponseDto>> GetUserRoutinesAsync(int currentUserId)
     {
-        var routines = await _context.Routines
+        return await _context.Routines
             .AsNoTracking()
-            .Include(r => r.Tasks)
             .Where(r => r.UserId == currentUserId)
+            .Select(r => new RoutineResponseDto
+            {
+                Id = r.Id,
+                Title = r.Title,
+                Category = r.Category,
+                Description = r.Description,
+                Frequency = r.Frequency,
+                IsDefault = r.IsDefault
+            })
             .ToListAsync();
-
-        return routines.Select(r => r.ToResponseDto()).ToList();
     }
 }

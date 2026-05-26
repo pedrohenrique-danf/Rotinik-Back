@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Rotinik.Core.Extensions;
-using Rotinik.Core.Data;
 using Rotinik.Features.Routines.DTOs;
-using Microsoft.EntityFrameworkCore;
 
 namespace Rotinik.Features.Routines;
 
@@ -13,12 +11,10 @@ namespace Rotinik.Features.Routines;
 public class RoutineController : ControllerBase
 {
     private readonly RoutineService _routineService;
-    private readonly AppDbContext _context;
 
-    public RoutineController(RoutineService routineService, AppDbContext context)
+    public RoutineController(RoutineService routineService)
     {
         _routineService = routineService;
-        _context = context;
     }
 
     [HttpPost]
@@ -32,7 +28,7 @@ public class RoutineController : ControllerBase
 
         var result = await _routineService.CreateRoutineAsync(currentUserId, dto);
 
-        return CreatedAtAction(nameof(GetUserRoutines), new { id = result.Id }, result);
+        return CreatedAtAction(nameof(GetUserRoutines), new { id = result.Id }, new { data = result, message = "Routine created." });
     }
 
     [HttpPut("{id}")]
@@ -68,35 +64,6 @@ public class RoutineController : ControllerBase
         var currentUserId = User.GetCurrentUserId();
         var routines = await _routineService.GetUserRoutinesAsync(currentUserId);
 
-        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId);
-        if (user == null) return Unauthorized();
-
-        // Compute level from points (simple formula: level = sqrt(points/100))
-        var level = Math.Max(1, (int)Math.Floor(Math.Sqrt(user.Points / 100.0)) + 1);
-        var nextLevelXp = (int)Math.Pow(level, 2) * 100;
-        var prevLevelXp = (int)Math.Pow(level - 1, 2) * 100;
-        var levelProgress = nextLevelXp > prevLevelXp
-            ? (double)(user.Points - prevLevelXp) / (nextLevelXp - prevLevelXp)
-            : 0;
-
-        var snapshot = new
-        {
-            user = new
-            {
-                id = user.Id.ToString(),
-                name = user.Name,
-                userName = user.UserName,
-                email = user.Email,
-                level,
-                currentXp = user.Points,
-                totalXp = user.Points,
-                coins = user.Coins,
-                levelProgress,
-                nextLevelXp
-            },
-            routines
-        };
-
-        return Ok(snapshot);
+        return Ok(new { data = routines });
     }
 }
