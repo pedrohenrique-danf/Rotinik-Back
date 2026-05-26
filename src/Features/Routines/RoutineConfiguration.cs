@@ -15,9 +15,22 @@ public class RoutineConfiguration : IEntityTypeConfiguration<Routine>
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.Property(x => x.Description)
+            .HasMaxLength(500)
+            .HasDefaultValue(string.Empty);
+
         builder.Property(x => x.Category)
             .IsRequired()
             .HasMaxLength(50);
+
+        builder.Property(x => x.Frequency)
+            .IsRequired()
+            .HasMaxLength(20)
+            .HasDefaultValue("daily");
+
+        builder.Property(x => x.CreatedAt)
+            .IsRequired()
+            .HasDefaultValueSql("NOW()");
 
         builder.HasOne(x => x.User)
             .WithMany()

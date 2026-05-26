@@ -15,6 +15,10 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .IsRequired()
             .HasMaxLength(150);
 
+        builder.Property(x => x.Description)
+            .HasMaxLength(500)
+            .HasDefaultValue(string.Empty);
+
         builder.Property(x => x.Frequency)
             .HasConversion<string>()
             .IsRequired();
@@ -28,6 +32,18 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
 
         builder.Property(x => x.CompletedAt)
             .IsRequired(false);
+
+        builder.Property(x => x.XpReward)
+            .IsRequired()
+            .HasDefaultValue(10);
+
+        builder.Property(x => x.CoinReward)
+            .IsRequired()
+            .HasDefaultValue(5);
+
+        builder.Property(x => x.Order)
+            .IsRequired()
+            .HasDefaultValue(0);
 
         builder.HasOne(x => x.Routine)
             .WithMany(r => r.Tasks)

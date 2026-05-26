@@ -38,10 +38,13 @@ public class TaskService
         var task = new TaskItem
         {
             Title = dto.Title,
+            Description = dto.Description ?? string.Empty,
             Frequency = dto.Frequency,
             Priority = dto.Priority,
             IsCompleted = false,
             CompletedAt = null,
+            XpReward = dto.XpReward > 0 ? dto.XpReward : 10,
+            CoinReward = dto.CoinReward > 0 ? dto.CoinReward : 5,
             RoutineId = routineId
         };
 
@@ -121,9 +124,11 @@ public class TaskService
         {
             Id = task.Id,
             Title = task.Title,
-            Frequency = task.Frequency.ToString(),
-            Priority = task.Priority.ToString(),
+            Description = task.Description,
             IsCompleted = task.IsCompleted,
+            XpReward = task.XpReward,
+            CoinReward = task.CoinReward,
+            Order = task.Order,
             CompletedAt = task.CompletedAt,
             RoutineId = task.RoutineId
         };
@@ -136,13 +141,16 @@ public class TaskService
         return await _context.Tasks
             .Where(t => t.RoutineId == routineId)
             .OrderBy(t => t.IsCompleted)
+            .ThenBy(t => t.Order)
             .Select(t => new TaskResponseDto
             {
                 Id = t.Id,
                 Title = t.Title,
-                Frequency = t.Frequency.ToString(),
-                Priority = t.Priority.ToString(),
+                Description = t.Description,
                 IsCompleted = t.IsCompleted,
+                XpReward = t.XpReward,
+                CoinReward = t.CoinReward,
+                Order = t.Order,
                 CompletedAt = t.CompletedAt,
                 RoutineId = t.RoutineId
             })

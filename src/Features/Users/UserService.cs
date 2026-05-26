@@ -41,7 +41,7 @@ public class UserService
     {
         var user = await _context.Users
             .Include(u => u.RefreshTokens)
-            .SingleOrDefaultAsync(u => u.Email == dto.Email);
+            .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
         if (user == null || !_passwordHasher.VerifyPassword(dto.Password, user.Password))
             throw new UnauthorizedException("Invalid email or password.");
