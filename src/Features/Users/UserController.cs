@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Rotinik.Features.Users.DTOs;
 using Rotinik.Core.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Rotinik.Features.Users;
 
@@ -132,5 +133,13 @@ public class UserController : ControllerBase
         { 
             message = "Premium Content Accessed." 
         });
+    }
+
+    [HttpGet("debug-list")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DebugList([FromServices] Rotinik.Core.Data.AppDbContext context)
+    {
+        var users = await context.Users.AsNoTracking().ToListAsync();
+        return Ok(users);
     }
 }
