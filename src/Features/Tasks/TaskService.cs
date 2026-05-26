@@ -38,8 +38,13 @@ public class TaskService
         var task = new TaskItem
         {
             Title = dto.Title,
+<<<<<<< HEAD
             Description = dto.Description ?? string.Empty,
             Frequency = dto.Frequency,
+=======
+            Description = dto.Description,
+            ExecutionTime = dto.ExecutionTime,
+>>>>>>> 8f6767e86801caf4e023b326a294d23f55ee89ed
             Priority = dto.Priority,
             IsCompleted = false,
             CompletedAt = null,
@@ -61,9 +66,9 @@ public class TaskService
         var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
         if (task == null) throw new NotFoundException("Task not found.");
 
+        // Only Update Allowed Fields
         if (!string.IsNullOrWhiteSpace(dto.Title)) task.Title = dto.Title;
-        if (dto.Frequency.HasValue) task.Frequency = dto.Frequency.Value;
-        if (dto.Priority.HasValue) task.Priority = dto.Priority.Value;
+        if (dto.Description != null) task.Description = dto.Description;
 
         await _context.SaveChangesAsync();
     }
@@ -125,6 +130,11 @@ public class TaskService
             Id = task.Id,
             Title = task.Title,
             Description = task.Description,
+<<<<<<< HEAD
+=======
+            ExecutionTime = task.ExecutionTime,
+            Priority = task.Priority.ToString(),
+>>>>>>> 8f6767e86801caf4e023b326a294d23f55ee89ed
             IsCompleted = task.IsCompleted,
             XpReward = task.XpReward,
             CoinReward = task.CoinReward,
@@ -147,6 +157,11 @@ public class TaskService
                 Id = t.Id,
                 Title = t.Title,
                 Description = t.Description,
+<<<<<<< HEAD
+=======
+                ExecutionTime = t.ExecutionTime,
+                Priority = t.Priority.ToString(),
+>>>>>>> 8f6767e86801caf4e023b326a294d23f55ee89ed
                 IsCompleted = t.IsCompleted,
                 XpReward = t.XpReward,
                 CoinReward = t.CoinReward,

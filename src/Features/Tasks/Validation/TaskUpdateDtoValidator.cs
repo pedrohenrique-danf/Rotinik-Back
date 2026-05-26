@@ -12,7 +12,9 @@ public class TaskUpdateDtoValidator : AbstractValidator<TaskUpdateDto>
             .WithMessage($"Title cannot exceed {TaskConstants.TitleMaxLength} characters.")
             .When(x => !string.IsNullOrEmpty(x.Title));
 
-        RuleFor(x => x.Frequency).IsInEnum().When(x => x.Frequency.HasValue).WithMessage("Invalid frequency.");
-        RuleFor(x => x.Priority).IsInEnum().When(x => x.Priority.HasValue).WithMessage("Invalid priority.");
+        RuleFor(x => x.Description)
+            .MaximumLength(TaskConstants.DescriptionMaxLength)
+            .WithMessage($"Description cannot exceed {TaskConstants.DescriptionMaxLength} characters.")
+            .When(x => x.Description != null);
     }
 }
