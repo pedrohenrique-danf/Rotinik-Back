@@ -28,7 +28,8 @@ public class TokenService
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim("name", user.Name),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("IsPremium", user.IsPremium.ToString())
+            new Claim("IsPremium", user.IsPremium.ToString()),
+            new Claim(ClaimTypes.Role, user.Role.ToString()) 
         };
 
         var token = new JwtSecurityToken(

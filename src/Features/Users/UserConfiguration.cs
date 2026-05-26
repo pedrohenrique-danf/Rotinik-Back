@@ -12,6 +12,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Role)
+            .IsRequired()
+            .HasDefaultValue(UserRole.User);
+
         builder.Property(x => x.Name)
             .IsRequired()
             .HasMaxLength(100);

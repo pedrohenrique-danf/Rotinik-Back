@@ -165,7 +165,8 @@ public class UserService
             Xp = user.Xp,
             Coins = user.Coins,
             IsPremium = user.IsPremium,
-            RankPosition = rankPosition
+            RankPosition = rankPosition,
+            Role = user.Role.ToString()
         };
     }
 
