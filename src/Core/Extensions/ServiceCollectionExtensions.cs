@@ -10,6 +10,7 @@ using System.Threading.RateLimiting;
 using Rotinik.Core.Data;
 using Rotinik.Core.Settings;
 using Rotinik.Core.Exceptions;
+using Microsoft.OpenApi;
 
 namespace Rotinik.Core.Extensions;
 
@@ -18,25 +19,25 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("RotinikConnection");
-        
-        services.AddDbContext<AppDbContext>(options => 
-            options.UseNpgsql(connectionString, npgsqlOptions => 
+
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.EnableRetryOnFailure(
                     maxRetryCount: 3,
                     maxRetryDelay: TimeSpan.FromSeconds(5),
                     errorCodesToAdd: null);
             }));
-        
+
         return services;
     }
 
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
-        
+
         var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
-        
+
         if (string.IsNullOrWhiteSpace(jwtSettings?.Secret))
             throw new InvalidOperationException("JWT Secret is missing in appsettings.json.");
 
@@ -58,10 +59,10 @@ public static class ServiceCollectionExtensions
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("PremiumOnly", policy => 
+            options.AddPolicy("PremiumOnly", policy =>
                 policy.RequireClaim("isPremium", "True"));
         });
-        
+
         return services;
     }
 
@@ -73,8 +74,8 @@ public static class ServiceCollectionExtensions
 
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
             {
-                var partitionKey = httpContext.User.Identity?.IsAuthenticated == true 
-                    ? httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                var partitionKey = httpContext.User.Identity?.IsAuthenticated == true
+                    ? httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                     : httpContext.Connection.RemoteIpAddress?.ToString();
 
                 return RateLimitPartition.GetFixedWindowLimiter(
@@ -92,7 +93,7 @@ public static class ServiceCollectionExtensions
                 opt.Window = TimeSpan.FromMinutes(1);
                 opt.PermitLimit = 500;
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-                opt.QueueLimit = 0; 
+                opt.QueueLimit = 0;
             });
         });
 
@@ -102,12 +103,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddControllers();
-        
-        services.AddMemoryCache(); 
-        
+        services.AddMemoryCache();
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<Program>();
-
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
 
@@ -122,7 +120,7 @@ public static class ServiceCollectionExtensions
 
         var hasherType = assembly.GetTypes()
             .FirstOrDefault(t => t.Name == "PasswordHasher");
-            
+
         if (hasherType != null)
         {
             services.AddScoped(hasherType);
@@ -141,6 +139,16 @@ public static class ServiceCollectionExtensions
                     .AllowAnyMethod()
                     .AllowAnyHeader();
             });
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddOpenApiWithBearer(this IServiceCollection services)
+    {
+        services.AddOpenApi(options =>
+        {
+            options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
         });
 
         return services;

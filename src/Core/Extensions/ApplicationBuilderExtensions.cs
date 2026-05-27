@@ -10,8 +10,15 @@ public static class ApplicationBuilderExtensions
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
-            app.MapScalarApiReference();
-            
+            app.MapScalarApiReference(options =>
+            {
+                options.WithTitle("Rotinik API")
+                .AddHttpAuthentication("Bearer", auth =>
+                {
+                    auth.Token = "";
+                });
+            });
+
             app.Lifetime.ApplicationStarted.Register(() =>
             {
                 app.Logger.LogInformation("Scalar API Docs: http://localhost:5025/scalar");
@@ -25,13 +32,10 @@ public static class ApplicationBuilderExtensions
         }
 
         app.UseExceptionHandler();
-
         app.UseRateLimiter();
-
         app.UseCors("AllowAll");
         app.UseAuthentication();
         app.UseAuthorization();
-        
         app.MapControllers();
 
         return app;

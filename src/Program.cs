@@ -8,7 +8,7 @@ builder.Services
     .AddCorsConfiguration()
     .AddRateLimitingConfiguration()
     .AddApplicationServices()
-    .AddOpenApi();
+    .AddOpenApiWithBearer();
 
 var app = builder.Build();
 
