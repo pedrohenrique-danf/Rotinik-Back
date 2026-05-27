@@ -11,10 +11,12 @@ namespace Rotinik.Features.Tasks;
 public class TaskController : ControllerBase
 {
     private readonly TaskService _taskService;
+    private readonly Rotinik.Features.Routines.RoutineService _routineService;
 
-    public TaskController(TaskService taskService)
+    public TaskController(TaskService taskService, Rotinik.Features.Routines.RoutineService routineService)
     {
         _taskService = taskService;
+        _routineService = routineService;
     }
 
     [HttpPost]
@@ -26,7 +28,8 @@ public class TaskController : ControllerBase
     {
         var currentUserId = User.GetCurrentUserId();
         var result = await _taskService.CreateTaskAsync(routineId, currentUserId, dto);
-        return StatusCode(201, new { data = result, message = "Task created." });
+        var updatedRoutine = await _routineService.GetRoutineByIdAsync(routineId, currentUserId);
+        return StatusCode(201, updatedRoutine);
     }
 
     [HttpPut("{taskId}")]
@@ -38,7 +41,8 @@ public class TaskController : ControllerBase
     {
         var currentUserId = User.GetCurrentUserId();
         await _taskService.UpdateTaskAsync(routineId, taskId, currentUserId, dto);
-        return NoContent();
+        var updatedRoutine = await _routineService.GetRoutineByIdAsync(routineId, currentUserId);
+        return Ok(updatedRoutine);
     }
 
     [HttpDelete("{taskId}")]
@@ -49,7 +53,8 @@ public class TaskController : ControllerBase
     {
         var currentUserId = User.GetCurrentUserId();
         await _taskService.DeleteTaskAsync(routineId, taskId, currentUserId);
-        return NoContent();
+        var updatedRoutine = await _routineService.GetRoutineByIdAsync(routineId, currentUserId);
+        return Ok(updatedRoutine);
     }
 
     [HttpPatch("{taskId}/toggle")]

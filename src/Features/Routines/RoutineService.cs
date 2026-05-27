@@ -32,6 +32,12 @@ public class RoutineService
         return routine;
     }
 
+    public async Task<RoutineResponseDto> GetRoutineByIdAsync(int id, int currentUserId)
+    {
+        var routine = await GetRoutineAndVerifyAccessAsync(id, currentUserId, "view");
+        return routine.ToResponseDto();
+    }
+
     public async Task<RoutineResponseDto> CreateRoutineAsync(int currentUserId, RoutineCreateDto dto)
     {
         var routine = new Routine
