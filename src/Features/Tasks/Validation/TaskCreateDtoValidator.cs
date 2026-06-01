@@ -13,6 +13,8 @@ public class TaskCreateDtoValidator : AbstractValidator<TaskCreateDto>
             .WithMessage($"Title cannot exceed {TaskConstants.TitleMaxLength} characters.");
 
         RuleFor(x => x.Frequency).IsInEnum().WithMessage("Invalid frequency.");
-        RuleFor(x => x.Priority).IsInEnum().WithMessage("Invalid priority.");
+        RuleFor(x => x.Importance)
+            .Must(x => new[] { "baixa", "media", "alta", "critica" }.Contains(x?.ToLower()))
+            .WithMessage("Invalid importance.");
     }
 }

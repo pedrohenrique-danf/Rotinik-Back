@@ -9,6 +9,8 @@ public class TaskResponseDto
     public int XpReward { get; set; }
     public int CoinReward { get; set; }
     public int Order { get; set; }
+    public string Importance { get; set; } = "media";
+    public int EstimatedMinutes { get; set; } = 30;
     public DateTime? CompletedAt { get; set; }
     public int RoutineId { get; set; }
 }

@@ -40,7 +40,8 @@ public class TaskService
             Title = dto.Title,
             Description = dto.Description ?? string.Empty,
             Frequency = dto.Frequency,
-            Priority = dto.Priority,
+            Priority = MapImportance(dto.Importance),
+            EstimatedMinutes = dto.EstimatedMinutes,
             IsCompleted = false,
             CompletedAt = null,
             XpReward = dto.XpReward > 0 ? dto.XpReward : 10,
@@ -63,7 +64,8 @@ public class TaskService
 
         if (!string.IsNullOrWhiteSpace(dto.Title)) task.Title = dto.Title;
         if (dto.Frequency.HasValue) task.Frequency = dto.Frequency.Value;
-        if (dto.Priority.HasValue) task.Priority = dto.Priority.Value;
+        if (!string.IsNullOrEmpty(dto.Importance)) task.Priority = MapImportance(dto.Importance);
+        if (dto.EstimatedMinutes.HasValue) task.EstimatedMinutes = dto.EstimatedMinutes.Value;
 
         await _context.SaveChangesAsync();
     }
@@ -130,7 +132,16 @@ public class TaskService
             CoinReward = task.CoinReward,
             Order = task.Order,
             CompletedAt = task.CompletedAt,
-            RoutineId = task.RoutineId
+            RoutineId = task.RoutineId,
+            EstimatedMinutes = task.EstimatedMinutes,
+            Importance = task.Priority switch
+            {
+                TaskPriority.Low => "baixa",
+                TaskPriority.Moderate => "media",
+                TaskPriority.Important => "alta",
+                TaskPriority.Urgent => "critica",
+                _ => "media"
+            }
         };
     }
 
@@ -152,8 +163,21 @@ public class TaskService
                 CoinReward = t.CoinReward,
                 Order = t.Order,
                 CompletedAt = t.CompletedAt,
-                RoutineId = t.RoutineId
+                RoutineId = t.RoutineId,
+                EstimatedMinutes = t.EstimatedMinutes,
+                Importance = t.Priority == TaskPriority.Low ? "baixa" :
+                             t.Priority == TaskPriority.Moderate ? "media" :
+                             t.Priority == TaskPriority.Important ? "alta" :
+                             t.Priority == TaskPriority.Urgent ? "critica" : "media"
             })
             .ToListAsync();
     }
+
+    private static TaskPriority MapImportance(string? importance) => importance?.ToLower() switch
+    {
+        "baixa" => TaskPriority.Low,
+        "alta" => TaskPriority.Important,
+        "critica" => TaskPriority.Urgent,
+        _ => TaskPriority.Moderate
+    };
 }

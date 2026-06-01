@@ -26,7 +26,12 @@ public static class RoutineMappingExtensions
                 CoinReward = t.CoinReward,
                 Order = t.Order,
                 CompletedAt = t.CompletedAt,
-                RoutineId = t.RoutineId
+                RoutineId = t.RoutineId,
+                EstimatedMinutes = t.EstimatedMinutes,
+                Importance = t.Priority == Rotinik.Features.Tasks.TaskPriority.Low ? "baixa" :
+                             t.Priority == Rotinik.Features.Tasks.TaskPriority.Moderate ? "media" :
+                             t.Priority == Rotinik.Features.Tasks.TaskPriority.Important ? "alta" :
+                             t.Priority == Rotinik.Features.Tasks.TaskPriority.Urgent ? "critica" : "media"
             }).OrderBy(t => t.Order).ToList()
         };
     }

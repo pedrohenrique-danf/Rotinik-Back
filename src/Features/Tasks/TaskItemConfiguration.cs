@@ -45,6 +45,10 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .IsRequired()
             .HasDefaultValue(0);
 
+        builder.Property(x => x.EstimatedMinutes)
+            .IsRequired()
+            .HasDefaultValue(30);
+
         builder.HasOne(x => x.Routine)
             .WithMany(r => r.Tasks)
             .HasForeignKey(x => x.RoutineId)

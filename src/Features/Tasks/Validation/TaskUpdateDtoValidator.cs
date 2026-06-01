@@ -13,6 +13,9 @@ public class TaskUpdateDtoValidator : AbstractValidator<TaskUpdateDto>
             .When(x => !string.IsNullOrEmpty(x.Title));
 
         RuleFor(x => x.Frequency).IsInEnum().When(x => x.Frequency.HasValue).WithMessage("Invalid frequency.");
-        RuleFor(x => x.Priority).IsInEnum().When(x => x.Priority.HasValue).WithMessage("Invalid priority.");
+        RuleFor(x => x.Importance)
+            .Must(x => new[] { "baixa", "media", "alta", "critica" }.Contains(x?.ToLower()))
+            .When(x => !string.IsNullOrEmpty(x.Importance))
+            .WithMessage("Invalid importance.");
     }
 }

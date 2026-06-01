@@ -14,6 +14,7 @@ public class TaskItem
     public int XpReward { get; set; } = 10;
     public int CoinReward { get; set; } = 5;
     public int Order { get; set; } = 0;
+    public int EstimatedMinutes { get; set; } = 30;
     
     public int RoutineId { get; set; }
     public Routine Routine { get; set; } = null!;
