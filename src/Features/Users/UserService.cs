@@ -119,17 +119,6 @@ public class UserService
 
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
-
-        var defaultRoutine = new Routine
-        {
-            Title = "Inbox",
-            Category = "System",
-            IsDefault = true,
-            UserId = user.Id
-        };
-        
-        await _context.Routines.AddAsync(defaultRoutine);
-        await _context.SaveChangesAsync();
     }
 
     public async Task<UserProfileDto?> GetPublicProfileAsync(string username)

@@ -26,9 +26,6 @@ public class RoutineService
         if (routine.UserId != currentUserId)
             throw new ForbiddenException($"Forbidden: You can only {action} your own routines.");
 
-        if (routine.IsDefault)
-            throw new ForbiddenException($"Forbidden: You cannot {action} the system's default routine.");
-
         return routine;
     }
 
