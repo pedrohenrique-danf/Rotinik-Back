@@ -71,7 +71,6 @@ public class RoutineController : ControllerBase
         var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId);
         if (user == null) return Unauthorized();
 
-        // Compute level from points (simple formula: level = sqrt(points/100))
         var level = Math.Max(1, (int)Math.Floor(Math.Sqrt(user.Points / 100.0)) + 1);
         var nextLevelXp = (int)Math.Pow(level, 2) * 100;
         var prevLevelXp = (int)Math.Pow(level - 1, 2) * 100;
