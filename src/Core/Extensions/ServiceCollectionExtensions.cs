@@ -87,10 +87,10 @@ public static class ServiceCollectionExtensions
                     });
             });
 
-            options.AddFixedWindowLimiter("LoginPolicy", opt =>
+            options.AddFixedWindowLimiter("TaskTogglePolicy", opt =>
             {
-                opt.Window = TimeSpan.FromMinutes(1);
-                opt.PermitLimit = 500;
+                opt.Window = TimeSpan.FromSeconds(3); // NOVO: Limite de tempo (Debounce)
+                opt.PermitLimit = 1; // NOVO: Permitir apenas 1 request nessa janela
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 opt.QueueLimit = 0; 
             });

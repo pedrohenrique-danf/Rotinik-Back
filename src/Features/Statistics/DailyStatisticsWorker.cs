@@ -55,25 +55,40 @@ public class DailyStatisticsWorker : BackgroundService
             .Select(g => new { UserId = g.Key, TasksCompleted = g.Count() })
             .ToListAsync(stoppingToken);
 
-        var summariesToInsert = new List<DailyUserSummary>();
+        var existingSummaries = await dbContext.Set<DailyUserSummary>()
+            .Where(s => s.Date == targetDate)
+            .ToDictionaryAsync(s => s.UserId, stoppingToken);
+
+        int newRecords = 0;
+        int updatedRecords = 0;
 
         foreach (var stat in tasksStats)
         {
-            summariesToInsert.Add(new DailyUserSummary
+            if (existingSummaries.TryGetValue(stat.UserId, out var summary))
             {
-                UserId = stat.UserId,
-                Date = targetDate,
-                TasksCompleted = stat.TasksCompleted,
-                RoutinesCompleted = 0,
-                PointsEarned = 0
-            });
+                summary.TasksCompleted = stat.TasksCompleted;
+                updatedRecords++;
+            }
+            else
+            {
+                dbContext.Set<DailyUserSummary>().Add(new DailyUserSummary
+                {
+                    UserId = stat.UserId,
+                    Date = targetDate,
+                    TasksCompleted = stat.TasksCompleted,
+                    RoutinesCompleted = 0,
+                    PointsEarned = 0,
+                    CoinsEarned = 0
+                });
+                newRecords++;
+            }
         }
 
-        if (summariesToInsert.Any())
+        if (newRecords > 0 || updatedRecords > 0)
         {
-            await dbContext.Set<DailyUserSummary>().AddRangeAsync(summariesToInsert);
             await dbContext.SaveChangesAsync(stoppingToken);
-            _logger.LogInformation("Successfully saved {Count} user summaries for {Date}.", summariesToInsert.Count, targetDate.ToString("yyyy-MM-dd"));
+            _logger.LogInformation("Successfully inserted {NewCount} and updated {UpdatedCount} user summaries for {Date}.", 
+                newRecords, updatedRecords, targetDate.ToString("yyyy-MM-dd"));
         }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Rotinik.Core.Extensions;
 using Rotinik.Features.Tasks.DTOs;
 
@@ -57,8 +58,21 @@ public class TaskController : ControllerBase
         return Ok(updatedRoutine);
     }
 
-    [HttpPatch("{taskId}/toggle")]
+    [HttpPatch("{taskId}/start")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> StartTask(int routineId, int taskId)
+    {
+        var currentUserId = User.GetCurrentUserId();
+        await _taskService.StartTaskAsync(routineId, taskId, currentUserId);
+        return Ok(new { message = "Task started successfully." });
+    }
+
+    [HttpPatch("{taskId}/toggle")]
+    [EnableRateLimiting("TaskTogglePolicy")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ToggleCompletion(int routineId, int taskId)
@@ -68,16 +82,5 @@ public class TaskController : ControllerBase
         var unlockedMedals = await _taskService.ToggleTaskCompletionAsync(routineId, taskId, currentUserId);
         
         return Ok(new { data = new { newlyUnlockedMedals = unlockedMedals } });
-    }
-
-    [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetTasks(int routineId)
-    {
-        var currentUserId = User.GetCurrentUserId();
-        var tasks = await _taskService.GetTasksByRoutineAsync(routineId, currentUserId);
-        return Ok(new { data = tasks });
     }
 }

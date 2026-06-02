@@ -53,5 +53,8 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .WithMany(r => r.Tasks)
             .HasForeignKey(x => x.RoutineId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Property(x => x.StartedAt)
+            .IsRequired(false);
     }
 }

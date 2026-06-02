@@ -4,11 +4,14 @@ using Rotinik.Core.Data;
 using Rotinik.Features.Tasks.DTOs;
 using Rotinik.Features.Medals;
 using Rotinik.Features.Medals.DTOs;
+using Rotinik.Features.Statistics;
 
 namespace Rotinik.Features.Tasks;
 
 public class TaskService
 {
+    private const int MaxDailyPoints = 500;
+    private const int MaxDailyCoins = 100;
     private readonly AppDbContext _context;
     private readonly MedalService _medalService;
 
@@ -81,26 +84,100 @@ public class TaskService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<List<MedalResponseDto>> ToggleTaskCompletionAsync(int routineId, int taskId, int currentUserId)
+    public async Task StartTaskAsync(int routineId, int taskId, int currentUserId)
     {
         await VerifyRoutineOwnershipAsync(routineId, currentUserId);
 
         var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
         if (task == null) throw new NotFoundException("Task not found.");
+        if (task.IsCompleted) throw new BadRequestException("Task is already completed.");
 
-        var user = await _context.Users.FindAsync(currentUserId);
-        if (user == null) throw new NotFoundException("User not found.");
+        task.StartedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+    }
 
-        var newlyUnlockedMedals = new List<MedalResponseDto>();
+    public async Task<List<MedalResponseDto>> ToggleTaskCompletionAsync(int routineId, int taskId, int currentUserId)
+{
+    await VerifyRoutineOwnershipAsync(routineId, currentUserId);
 
+    var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
+    if (task == null) throw new NotFoundException("Task not found.");
+
+    var user = await _context.Users.FindAsync(currentUserId);
+    if (user == null) throw new NotFoundException("User not found.");
+
+    var newlyUnlockedMedals = new List<MedalResponseDto>();
+
+    using var transaction = await _context.Database.BeginTransactionAsync();
+    try
+    {
         if (!task.IsCompleted)
         {
+            if (!task.StartedAt.HasValue)
+                throw new BadRequestException("Você precisa iniciar a tarefa antes de concluí-la.");
+
+            var elapsed = DateTime.UtcNow - task.StartedAt.Value;
+            var minAllowedTime = TimeSpan.FromMinutes(task.EstimatedMinutes * 0.05);
+            
+            if (elapsed < minAllowedTime)
+                throw new BadRequestException("Tarefa concluída rápido demais. Isso não parece natural!");
+
+            var today = DateTime.UtcNow.Date;
+            var dailySummary = await _context.DailyUserSummaries
+                .FirstOrDefaultAsync(d => d.UserId == currentUserId && d.Date == today);
+
+            if (dailySummary == null)
+            {
+                dailySummary = new DailyUserSummary { UserId = currentUserId, Date = today };
+                _context.DailyUserSummaries.Add(dailySummary);
+            }
+
+            int pointsToAward = task.XpReward;
+            int coinsToAward = task.CoinReward;
+
+            if (dailySummary.PointsEarned + pointsToAward > MaxDailyPoints)
+                pointsToAward = Math.Max(0, MaxDailyPoints - dailySummary.PointsEarned);
+
+            if (dailySummary.CoinsEarned + coinsToAward > MaxDailyCoins)
+                coinsToAward = Math.Max(0, MaxDailyCoins - dailySummary.CoinsEarned);
+
             task.IsCompleted = true;
             task.CompletedAt = DateTime.UtcNow;
+
+            user.Points += pointsToAward;
+            user.Coins += coinsToAward;
             
-            user.Points += 10;
-            user.Coins += 5;
-            
+            dailySummary.PointsEarned += pointsToAward;
+            dailySummary.CoinsEarned += coinsToAward;
+
+            if (pointsToAward > 0)
+            {
+                _context.Set<WalletTransaction>().Add(new WalletTransaction
+                {
+                    UserId = currentUserId,
+                    Amount = pointsToAward,
+                    Currency = CurrencyType.Points,
+                    Type = TransactionType.Earned,
+                    Source = TransactionSource.Task,
+                    Description = $"Concluiu: {task.Title}",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            if (coinsToAward > 0)
+            {
+                _context.Set<WalletTransaction>().Add(new WalletTransaction
+                {
+                    UserId = currentUserId,
+                    Amount = coinsToAward,
+                    Currency = CurrencyType.Coins,
+                    Type = TransactionType.Earned,
+                    Source = TransactionSource.Task,
+                    Description = $"Concluiu: {task.Title}",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
             await _context.SaveChangesAsync();
 
             newlyUnlockedMedals.AddRange(await _medalService.EvaluateMedalsAsync(currentUserId, MedalTriggerType.TasksCompleted));
@@ -110,15 +187,56 @@ public class TaskService
         {
             task.IsCompleted = false;
             task.CompletedAt = null;
+            task.StartedAt = null; 
+
+            user.Points = Math.Max(0, user.Points - task.XpReward);
+            user.Coins = Math.Max(0, user.Coins - task.CoinReward);
+
+            var today = DateTime.UtcNow.Date;
+            var dailySummary = await _context.DailyUserSummaries
+                .FirstOrDefaultAsync(d => d.UserId == currentUserId && d.Date == today);
             
-            user.Points = Math.Max(0, user.Points - 10);
-            user.Coins = Math.Max(0, user.Coins - 5);
-            
+            if (dailySummary != null)
+            {
+                dailySummary.PointsEarned = Math.Max(0, dailySummary.PointsEarned - task.XpReward);
+                dailySummary.CoinsEarned = Math.Max(0, dailySummary.CoinsEarned - task.CoinReward);
+            }
+
+            _context.Set<WalletTransaction>().Add(new WalletTransaction
+            {
+                UserId = currentUserId,
+                Amount = task.XpReward,
+                Currency = CurrencyType.Points,
+                Type = TransactionType.Penalty, // Ou TransactionType.Lost
+                Source = TransactionSource.Task,
+                Description = $"Desmarcou: {task.Title}",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            _context.Set<WalletTransaction>().Add(new WalletTransaction
+            {
+                UserId = currentUserId,
+                Amount = task.CoinReward,
+                Currency = CurrencyType.Coins,
+                Type = TransactionType.Penalty,
+                Source = TransactionSource.Task,
+                Description = $"Desmarcou: {task.Title}",
+                CreatedAt = DateTime.UtcNow
+            });
+
             await _context.SaveChangesAsync();
         }
 
-        return newlyUnlockedMedals;
+        await transaction.CommitAsync();
     }
+    catch
+    {
+        await transaction.RollbackAsync();
+        throw;
+    }
+
+    return newlyUnlockedMedals;
+}
 
     private static TaskResponseDto MapToResponse(TaskItem task)
     {

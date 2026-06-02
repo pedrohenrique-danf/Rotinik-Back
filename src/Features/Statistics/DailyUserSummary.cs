@@ -9,9 +9,10 @@ public class DailyUserSummary
     public User User { get; set; } = null!;
     
     public DateTime Date { get; set; }
-    public int TasksCompleted { get; set; }
-    public int RoutinesCompleted { get; set; }
-    public int PointsEarned { get; set; }
     
-    public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
+    public int PointsEarned { get; set; } = 0;
+    public int CoinsEarned { get; set; } = 0;
+    
+    public int TasksCompleted { get; set; } = 0;
+    public int RoutinesCompleted { get; set; } = 0;
 }
