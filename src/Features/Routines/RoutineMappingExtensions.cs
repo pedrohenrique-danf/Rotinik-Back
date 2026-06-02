@@ -16,7 +16,8 @@ public static class RoutineMappingExtensions
             Frequency = routine.Frequency,
             IsDefault = routine.IsDefault,
             CreatedAt = routine.CreatedAt,
-            Tasks = routine.Tasks.Select(t => new TaskResponseDto
+            // BLINDAGEM: Os operadores '?' e '??' evitam falhas catastróficas por Null Reference
+            Tasks = routine.Tasks?.Select(t => new TaskResponseDto
             {
                 Id = t.Id,
                 Title = t.Title,
@@ -32,7 +33,7 @@ public static class RoutineMappingExtensions
                              t.Priority == Rotinik.Features.Tasks.TaskPriority.Moderate ? "media" :
                              t.Priority == Rotinik.Features.Tasks.TaskPriority.Important ? "alta" :
                              t.Priority == Rotinik.Features.Tasks.TaskPriority.Urgent ? "critica" : "media"
-            }).OrderBy(t => t.Order).ToList()
+            }).OrderBy(t => t.Order).ToList() ?? new List<TaskResponseDto>()
         };
     }
 }
