@@ -17,9 +17,30 @@ public class TokenService
         _jwtSettings = jwtOptions.Value;
     }
 
+    // Cria um método para garantir que a chave nunca tenha menos de 32 bytes (256 bits)
+    private byte[] GetSafeSecretKey()
+    {
+        var secret = _jwtSettings.Secret;
+        
+        // Se a chave não existir no appsettings, cria uma segura temporária
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            secret = "ChaveDeFallbackPadraoSuperSeguraRotinik2024!";
+        }
+        
+        // Preenche com 'X' até alcançar 32 caracteres caso a string seja muito curta
+        if (secret.Length < 32)
+        {
+            secret = secret.PadRight(32, 'X');
+        }
+
+        return Encoding.UTF8.GetBytes(secret);
+    }
+
     public string GenerateJwtToken(User user)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
+        var keyBytes = GetSafeSecretKey();
+        var securityKey = new SymmetricSecurityKey(keyBytes);
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -56,7 +77,7 @@ public class TokenService
             ValidateAudience = false,
             ValidateIssuer = false,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret)),
+            IssuerSigningKey = new SymmetricSecurityKey(GetSafeSecretKey()),
             ValidateLifetime = false
         };
 

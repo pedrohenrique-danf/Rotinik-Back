@@ -66,10 +66,12 @@ public class RoutineController : ControllerBase
     public async Task<IActionResult> GetUserRoutines()
     {
         var currentUserId = User.GetCurrentUserId();
-        var routines = await _routineService.GetUserRoutinesAsync(currentUserId);
 
+        // FAIL FAST: Interrompe a requisição imediatamente se o usuário do Token for inválido no banco
         var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId);
         if (user == null) return Unauthorized();
+
+        var routines = await _routineService.GetUserRoutinesAsync(currentUserId);
 
         var level = Math.Max(1, (int)Math.Floor(Math.Sqrt(user.Points / 100.0)) + 1);
         var nextLevelXp = (int)Math.Pow(level, 2) * 100;

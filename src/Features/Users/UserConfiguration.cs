@@ -42,6 +42,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasDefaultValue(0);
 
+        // Mapeamento explícito do relacionamento das Medalhas
         builder.HasMany<Medal>()
         .WithMany()
         .UsingEntity<UserMedal>(
@@ -51,6 +52,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 j.HasKey(um => new { um.UserId, um.MedalId });
                 j.ToTable("UserMedals");
             });
+
+        // MAPEAMENTO CORRIGIDO: Explicitando a relação e a tabela de RefreshTokens
+        builder.HasMany(x => x.RefreshTokens)
+            .WithOne(rt => rt.User)
+            .HasForeignKey(rt => rt.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(x => x.Email).IsUnique();
         builder.HasIndex(x => x.UserName).IsUnique();
