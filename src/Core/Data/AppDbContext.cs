@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<DailyUserSummary> DailyUserSummaries { get; set; }
     public DbSet<ShopItem> ShopItems { get; set; }
     public DbSet<WalletTransaction> WalletTransactions { get; set; }
+    public DbSet<Rotinik.Features.Tasks.TaskHistory> TaskHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

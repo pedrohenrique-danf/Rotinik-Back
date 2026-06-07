@@ -15,3 +15,9 @@ public enum TaskPriority
     Important = 3,
     Urgent = 4
 }
+
+public enum TaskHistoryStatus
+{
+    Completed = 1,
+    Failed = 2
+}
