@@ -28,7 +28,7 @@ public static class RoutineMappingExtensions
                 Order = t.Order,
                 CompletedAt = t.CompletedAt,
                 RoutineId = t.RoutineId,
-                EstimatedMinutes = t.EstimatedMinutes,
+                DeadlineValue = t.DeadlineValue,
                 Importance = t.Priority == Rotinik.Features.Tasks.TaskPriority.Low ? "baixa" :
                              t.Priority == Rotinik.Features.Tasks.TaskPriority.Moderate ? "media" :
                              t.Priority == Rotinik.Features.Tasks.TaskPriority.Important ? "alta" :

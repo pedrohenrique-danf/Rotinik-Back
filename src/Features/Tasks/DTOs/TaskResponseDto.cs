@@ -10,7 +10,7 @@ public class TaskResponseDto
     public int CoinReward { get; set; }
     public int Order { get; set; }
     public string Importance { get; set; } = "media";
-    public int EstimatedMinutes { get; set; } = 30;
+    public string? DeadlineValue { get; set; }
     public DateTime? CompletedAt { get; set; }
     public int RoutineId { get; set; }
 }

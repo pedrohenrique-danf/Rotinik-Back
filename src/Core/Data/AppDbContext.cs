@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<UserMedal> UserMedals { get; set; }
     public DbSet<DailyUserSummary> DailyUserSummaries { get; set; }
     public DbSet<ShopItem> ShopItems { get; set; }
+    public DbSet<WalletTransaction> WalletTransactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

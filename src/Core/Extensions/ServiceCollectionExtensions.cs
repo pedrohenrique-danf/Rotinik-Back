@@ -96,6 +96,14 @@ public static class ServiceCollectionExtensions
                 opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                 opt.QueueLimit = 0; 
             });
+
+            options.AddFixedWindowLimiter("LoginPolicy", opt =>
+            {
+                opt.Window = TimeSpan.FromMinutes(1);
+                opt.PermitLimit = 5;
+                opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                opt.QueueLimit = 0; 
+            });
         });
 
         return services;

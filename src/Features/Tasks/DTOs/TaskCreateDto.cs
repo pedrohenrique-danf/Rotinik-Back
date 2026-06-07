@@ -8,5 +8,5 @@ public class TaskCreateDto
     public int CoinReward { get; set; } = 5;
     public TaskFrequency Frequency { get; set; } = TaskFrequency.None;
     public string Importance { get; set; } = "media";
-    public int EstimatedMinutes { get; set; } = 30;
+    public string? DeadlineValue { get; set; }
 }

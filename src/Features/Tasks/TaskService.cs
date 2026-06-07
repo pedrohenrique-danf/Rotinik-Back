@@ -51,7 +51,7 @@ public class TaskService
             Description = dto.Description ?? string.Empty,
             Frequency = dto.Frequency,
             Priority = MapImportance(dto.Importance),
-            EstimatedMinutes = dto.EstimatedMinutes,
+            DeadlineValue = dto.DeadlineValue,
             IsCompleted = false,
             CompletedAt = null,
             XpReward = dto.XpReward > 0 ? dto.XpReward : 10,
@@ -73,9 +73,10 @@ public class TaskService
         if (task == null) throw new NotFoundException("Task not found.");
 
         if (!string.IsNullOrWhiteSpace(dto.Title)) task.Title = dto.Title;
+        if (dto.Description != null) task.Description = dto.Description;
         if (dto.Frequency.HasValue) task.Frequency = dto.Frequency.Value;
         if (!string.IsNullOrEmpty(dto.Importance)) task.Priority = MapImportance(dto.Importance);
-        if (dto.EstimatedMinutes.HasValue) task.EstimatedMinutes = dto.EstimatedMinutes.Value;
+        if (!string.IsNullOrWhiteSpace(dto.DeadlineValue)) task.DeadlineValue = dto.DeadlineValue;
 
         await _context.SaveChangesAsync();
     }
@@ -115,20 +116,8 @@ public class TaskService
 
         var newlyUnlockedMedals = new List<MedalResponseDto>();
 
-    using var transaction = await _context.Database.BeginTransactionAsync();
-    try
-    {
         if (!task.IsCompleted)
         {
-            if (!task.StartedAt.HasValue)
-                throw new BadRequestException("Você precisa iniciar a tarefa antes de concluí-la.");
-
-            var elapsed = DateTime.UtcNow - task.StartedAt.Value;
-            var minAllowedTime = TimeSpan.FromMinutes(task.EstimatedMinutes * 0.05);
-            
-            if (elapsed < minAllowedTime)
-                throw new BadRequestException("Tarefa concluída rápido demais. Isso não parece natural!");
-
             var today = DateTime.UtcNow.Date;
             var dailySummary = await _context.DailyUserSummaries
                 .FirstOrDefaultAsync(d => d.UserId == currentUserId && d.Date == today);
@@ -234,14 +223,6 @@ public class TaskService
             await _context.SaveChangesAsync();
         }
 
-        await transaction.CommitAsync();
-    }
-    catch
-    {
-        await transaction.RollbackAsync();
-        throw;
-    }
-
     return newlyUnlockedMedals;
 }
 
@@ -258,7 +239,7 @@ public class TaskService
             Order = task.Order,
             CompletedAt = task.CompletedAt,
             RoutineId = task.RoutineId,
-            EstimatedMinutes = task.EstimatedMinutes,
+            DeadlineValue = task.DeadlineValue,
             Importance = task.Priority switch
             {
                 TaskPriority.Low => "baixa",
@@ -289,7 +270,7 @@ public class TaskService
                 Order = t.Order,
                 CompletedAt = t.CompletedAt,
                 RoutineId = t.RoutineId,
-                EstimatedMinutes = t.EstimatedMinutes,
+                DeadlineValue = t.DeadlineValue,
                 Importance = t.Priority == TaskPriority.Low ? "baixa" :
                              t.Priority == TaskPriority.Moderate ? "media" :
                              t.Priority == TaskPriority.Important ? "alta" :

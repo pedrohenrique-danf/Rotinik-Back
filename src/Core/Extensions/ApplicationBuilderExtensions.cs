@@ -1,5 +1,6 @@
 using Scalar.AspNetCore;
 using Rotinik.Core.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Rotinik.Core.Extensions;
 
@@ -20,7 +21,8 @@ public static class ApplicationBuilderExtensions
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                db.Database.EnsureCreated();
+                var strategy = db.Database.CreateExecutionStrategy();
+                strategy.Execute(() => db.Database.Migrate());
             }
         }
 

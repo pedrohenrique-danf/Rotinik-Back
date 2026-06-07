@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rotinik.Core.Data;
@@ -11,9 +12,11 @@ using Rotinik.Core.Data;
 namespace Rotinik.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607194125_AddTaskCreatedAt")]
+    partial class AddTaskCreatedAt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -345,43 +348,6 @@ namespace Rotinik.Migrations
                     b.ToTable("DailyUserSummaries", (string)null);
                 });
 
-            modelBuilder.Entity("Rotinik.Features.Statistics.WalletTransaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Amount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Currency")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Source")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("WalletTransactions");
-                });
-
             modelBuilder.Entity("Rotinik.Features.Tasks.TaskItem", b =>
                 {
                     b.Property<int>("Id")
@@ -599,17 +565,6 @@ namespace Rotinik.Migrations
                 });
 
             modelBuilder.Entity("Rotinik.Features.Statistics.DailyUserSummary", b =>
-                {
-                    b.HasOne("Rotinik.Features.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Rotinik.Features.Statistics.WalletTransaction", b =>
                 {
                     b.HasOne("Rotinik.Features.Users.User", "User")
                         .WithMany()

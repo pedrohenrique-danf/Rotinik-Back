@@ -45,9 +45,9 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(x => x.EstimatedMinutes)
-            .IsRequired()
-            .HasDefaultValue(30);
+        builder.Property(x => x.DeadlineValue)
+            .HasMaxLength(50)
+            .IsRequired(false);
 
         builder.HasOne(x => x.Routine)
             .WithMany(r => r.Tasks)
@@ -56,5 +56,9 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
 
         builder.Property(x => x.StartedAt)
             .IsRequired(false);
+
+        builder.Property(x => x.CreatedAt)
+            .IsRequired()
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 }

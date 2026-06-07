@@ -141,7 +141,7 @@ public class RoutineService
                 XpReward = task.XpReward,
                 CoinReward = task.CoinReward,
                 Order = task.Order,
-                EstimatedMinutes = task.EstimatedMinutes
+                DeadlineValue = task.DeadlineValue
             });
         }
 
@@ -187,7 +187,7 @@ public class RoutineService
                 IsCompleted = false,
                 XpReward = t.XpReward > 0 ? t.XpReward : 10,
                 CoinReward = t.CoinReward > 0 ? t.CoinReward : 5,
-                EstimatedMinutes = t.EstimatedMinutes > 0 ? t.EstimatedMinutes : 30
+                DeadlineValue = t.DeadlineValue
             });
         }
 
