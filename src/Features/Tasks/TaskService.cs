@@ -21,7 +21,7 @@ public class TaskService
         _medalService = medalService;
     }
 
-    private async Task VerifyRoutineOwnershipAsync(int routineId, int currentUserId)
+    private async Task VerifyRoutineOwnershipAsync(int routineId, int currentUserId, bool isAdmin = false)
     {
         var routine = await _context.Routines
             .AsNoTracking()
@@ -30,13 +30,20 @@ public class TaskService
         if (routine == null)
             throw new NotFoundException("Routine not found.");
 
+        if (routine.IsDefault)
+        {
+            if (!isAdmin)
+                throw new ForbiddenException("Forbidden: Only administrators can modify global templates.");
+            return;
+        }
+
         if (routine.UserId != currentUserId)
             throw new ForbiddenException("Forbidden: You can only modify tasks in your own routines.");
     }
 
-    public async Task<TaskResponseDto> CreateTaskAsync(int routineId, int currentUserId, TaskCreateDto dto)
+    public async Task<TaskResponseDto> CreateTaskAsync(int routineId, int currentUserId, TaskCreateDto dto, bool isAdmin = false)
     {
-        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId, isAdmin);
 
         var task = new TaskItem
         {
@@ -58,9 +65,9 @@ public class TaskService
         return MapToResponse(task);
     }
 
-    public async Task UpdateTaskAsync(int routineId, int taskId, int currentUserId, TaskUpdateDto dto)
+    public async Task UpdateTaskAsync(int routineId, int taskId, int currentUserId, TaskUpdateDto dto, bool isAdmin = false)
     {
-        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId, isAdmin);
 
         var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
         if (task == null) throw new NotFoundException("Task not found.");
@@ -73,9 +80,9 @@ public class TaskService
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteTaskAsync(int routineId, int taskId, int currentUserId)
+    public async Task DeleteTaskAsync(int routineId, int taskId, int currentUserId, bool isAdmin = false)
     {
-        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId, isAdmin);
 
         var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
         if (task == null) throw new NotFoundException("Task not found.");
@@ -84,9 +91,9 @@ public class TaskService
         await _context.SaveChangesAsync();
     }
 
-    public async Task StartTaskAsync(int routineId, int taskId, int currentUserId)
+    public async Task StartTaskAsync(int routineId, int taskId, int currentUserId, bool isAdmin = false)
     {
-        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId, isAdmin);
 
         var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
         if (task == null) throw new NotFoundException("Task not found.");
@@ -96,17 +103,17 @@ public class TaskService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<List<MedalResponseDto>> ToggleTaskCompletionAsync(int routineId, int taskId, int currentUserId)
-{
-    await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+    public async Task<List<MedalResponseDto>> ToggleTaskCompletionAsync(int routineId, int taskId, int currentUserId, bool isAdmin = false)
+    {
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId, isAdmin);
 
-    var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
-    if (task == null) throw new NotFoundException("Task not found.");
+        var task = await _context.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.RoutineId == routineId);
+        if (task == null) throw new NotFoundException("Task not found.");
 
-    var user = await _context.Users.FindAsync(currentUserId);
-    if (user == null) throw new NotFoundException("User not found.");
+        var user = await _context.Users.FindAsync(currentUserId);
+        if (user == null) throw new NotFoundException("User not found.");
 
-    var newlyUnlockedMedals = new List<MedalResponseDto>();
+        var newlyUnlockedMedals = new List<MedalResponseDto>();
 
     using var transaction = await _context.Database.BeginTransactionAsync();
     try
@@ -263,9 +270,9 @@ public class TaskService
         };
     }
 
-    public async Task<List<TaskResponseDto>> GetTasksByRoutineAsync(int routineId, int currentUserId)
+    public async Task<List<TaskResponseDto>> GetTasksByRoutineAsync(int routineId, int currentUserId, bool isAdmin = false)
     {
-        await VerifyRoutineOwnershipAsync(routineId, currentUserId);
+        await VerifyRoutineOwnershipAsync(routineId, currentUserId, isAdmin);
 
         return await _context.Tasks
             .Where(t => t.RoutineId == routineId)

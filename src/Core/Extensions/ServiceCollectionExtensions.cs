@@ -60,6 +60,8 @@ public static class ServiceCollectionExtensions
         {
             options.AddPolicy("PremiumOnly", policy => 
                 policy.RequireClaim("isPremium", "True"));
+            options.AddPolicy("AdminOnly", policy =>
+                policy.RequireClaim(ClaimTypes.Role, "admin"));
         });
         
         return services;

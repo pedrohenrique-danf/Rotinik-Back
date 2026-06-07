@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rotinik.Core.Data;
@@ -11,9 +12,11 @@ using Rotinik.Core.Data;
 namespace Rotinik.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607040430_AddAdminSupport")]
+    partial class AddAdminSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -475,21 +478,6 @@ namespace Rotinik.Migrations
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            BirthDate = new DateTime(2000, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Coins = 1000,
-                            Email = "admin@rotinik.com",
-                            IsPremium = true,
-                            Name = "Administrador",
-                            Password = "$2a$11$ah3WykwyffrfPRSXBSynZOnXqdFPrVjJeHB6vTmN47FIn1rPJ.9wq",
-                            Points = 1000,
-                            Role = "admin",
-                            UserName = "admin"
-                        });
                 });
 
             modelBuilder.Entity("Rotinik.Features.Users.UserRefreshToken", b =>

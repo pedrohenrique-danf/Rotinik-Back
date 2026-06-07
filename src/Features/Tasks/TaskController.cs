@@ -28,8 +28,9 @@ public class TaskController : ControllerBase
     public async Task<IActionResult> CreateTask(int routineId, TaskCreateDto dto)
     {
         var currentUserId = User.GetCurrentUserId();
-        var result = await _taskService.CreateTaskAsync(routineId, currentUserId, dto);
-        var updatedRoutine = await _routineService.GetRoutineByIdAsync(routineId, currentUserId);
+        var isAdmin = User.IsInRole("admin");
+        var result = await _taskService.CreateTaskAsync(routineId, currentUserId, dto, isAdmin);
+        var updatedRoutine = await _routineService.GetRoutineByIdAsync(routineId, currentUserId, isAdmin);
         return StatusCode(201, updatedRoutine);
     }
 
@@ -41,8 +42,9 @@ public class TaskController : ControllerBase
     public async Task<IActionResult> UpdateTask(int routineId, int taskId, TaskUpdateDto dto)
     {
         var currentUserId = User.GetCurrentUserId();
-        await _taskService.UpdateTaskAsync(routineId, taskId, currentUserId, dto);
-        var updatedRoutine = await _routineService.GetRoutineByIdAsync(routineId, currentUserId);
+        var isAdmin = User.IsInRole("admin");
+        await _taskService.UpdateTaskAsync(routineId, taskId, currentUserId, dto, isAdmin);
+        var updatedRoutine = await _routineService.GetRoutineByIdAsync(routineId, currentUserId, isAdmin);
         return Ok(updatedRoutine);
     }
 
@@ -53,8 +55,9 @@ public class TaskController : ControllerBase
     public async Task<IActionResult> DeleteTask(int routineId, int taskId)
     {
         var currentUserId = User.GetCurrentUserId();
-        await _taskService.DeleteTaskAsync(routineId, taskId, currentUserId);
-        var updatedRoutine = await _routineService.GetRoutineByIdAsync(routineId, currentUserId);
+        var isAdmin = User.IsInRole("admin");
+        await _taskService.DeleteTaskAsync(routineId, taskId, currentUserId, isAdmin);
+        var updatedRoutine = await _routineService.GetRoutineByIdAsync(routineId, currentUserId, isAdmin);
         return Ok(updatedRoutine);
     }
 

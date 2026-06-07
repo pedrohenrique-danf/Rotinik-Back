@@ -11,6 +11,8 @@ public class User
     public bool IsPremium { get; set; } = false;
     public int Points { get; set; } = 0;
     public int Coins { get; set; } = 0;
+    public string Role { get; set; } = "user";
+    public bool IsAdmin => Role == "admin";
 
     public ICollection<UserRefreshToken> RefreshTokens { get; set; } = new List<UserRefreshToken>();
 }

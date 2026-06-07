@@ -12,8 +12,8 @@ public class Routine
     public string Frequency { get; set; } = "daily";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
-    public int UserId { get; set; }
-    public User User { get; set; } = null!;
+    public int? UserId { get; set; }
+    public User? User { get; set; }
     
     public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
     public bool IsDefault { get; set; } = false;

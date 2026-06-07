@@ -35,6 +35,7 @@ public class RoutineConfiguration : IEntityTypeConfiguration<Routine>
         builder.HasOne(x => x.User)
             .WithMany()
             .HasForeignKey(x => x.UserId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

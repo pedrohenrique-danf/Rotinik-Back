@@ -11,4 +11,6 @@ public class UserResponseDto
     public int Coins { get; set; }
     public bool IsPremium { get; set; }
     public int RankPosition { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public bool IsAdmin { get; set; }
 }

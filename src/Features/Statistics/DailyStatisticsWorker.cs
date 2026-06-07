@@ -50,9 +50,9 @@ public class DailyStatisticsWorker : BackgroundService
         var targetDate = DateTime.UtcNow.Date.AddDays(-1);
 
         var tasksStats = await dbContext.Tasks
-            .Where(t => t.CompletedAt >= targetDate && t.CompletedAt < targetDate.AddDays(1) && t.IsCompleted)
+            .Where(t => t.CompletedAt >= targetDate && t.CompletedAt < targetDate.AddDays(1) && t.IsCompleted && t.Routine.UserId != null)
             .GroupBy(t => t.Routine.UserId)
-            .Select(g => new { UserId = g.Key, TasksCompleted = g.Count() })
+            .Select(g => new { UserId = g.Key.Value, TasksCompleted = g.Count() })
             .ToListAsync(stoppingToken);
 
         var existingSummaries = await dbContext.Set<DailyUserSummary>()

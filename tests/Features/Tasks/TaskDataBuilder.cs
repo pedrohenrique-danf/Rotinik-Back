@@ -9,13 +9,13 @@ public static class TaskDataBuilder
     {
         Title = $"Test Task {Guid.NewGuid():N}",
         Frequency = TaskFrequency.Daily,
-        Priority = TaskPriority.Important
+        Importance = "alta"
     };
 
     public static TaskUpdateDto CreateValidUpdateDto() => new()
     {
         Title = "Updated Task Title",
         Frequency = TaskFrequency.Monthly,
-        Priority = TaskPriority.Urgent
+        Importance = "critica"
     };
 }

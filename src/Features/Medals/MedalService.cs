@@ -109,4 +109,63 @@ public class MedalService
     {
         return await Task.FromResult(0);
     }
+
+    public async Task<MedalResponseDto> CreateMedalAsync(MedalCreateDto dto)
+    {
+        var medal = new Medal
+        {
+            Name = dto.Name,
+            Description = dto.Description,
+            IconUrl = dto.IconUrl,
+            TriggerType = dto.TriggerType,
+            TargetValue = dto.TargetValue
+        };
+
+        await _context.Medals.AddAsync(medal);
+        await _context.SaveChangesAsync();
+
+        return MapToResponse(medal);
+    }
+
+    public async Task UpdateMedalAsync(int id, MedalUpdateDto dto)
+    {
+        var medal = await _context.Medals.FindAsync(id);
+        if (medal == null)
+            throw new Core.Exceptions.NotFoundException("Medal not found.");
+
+        if (dto.Name != null) medal.Name = dto.Name;
+        if (dto.Description != null) medal.Description = dto.Description;
+        if (dto.IconUrl != null) medal.IconUrl = dto.IconUrl;
+        if (dto.TriggerType.HasValue) medal.TriggerType = dto.TriggerType.Value;
+        if (dto.TargetValue.HasValue) medal.TargetValue = dto.TargetValue.Value;
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteMedalAsync(int id)
+    {
+        var medal = await _context.Medals.FindAsync(id);
+        if (medal == null)
+            throw new Core.Exceptions.NotFoundException("Medal not found.");
+
+        // Clear associated UserMedals records
+        var userMedals = _context.Set<UserMedal>().Where(um => um.MedalId == id);
+        _context.Set<UserMedal>().RemoveRange(userMedals);
+
+        _context.Medals.Remove(medal);
+        await _context.SaveChangesAsync();
+    }
+
+    private static MedalResponseDto MapToResponse(Medal m)
+    {
+        return new MedalResponseDto
+        {
+            Id = m.Id,
+            Name = m.Name,
+            Description = m.Description,
+            IconUrl = m.IconUrl,
+            TriggerType = m.TriggerType,
+            TargetValue = m.TargetValue
+        };
+    }
 }

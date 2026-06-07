@@ -4,6 +4,7 @@ using Rotinik.Features.Routines;
 using Rotinik.Features.Users;
 using Rotinik.Features.Medals;
 using Rotinik.Features.Statistics;
+using Rotinik.Features.Shop;
 
 namespace Rotinik.Core.Data;
 
@@ -19,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<Medal> Medals { get; set; }
     public DbSet<UserMedal> UserMedals { get; set; }
     public DbSet<DailyUserSummary> DailyUserSummaries { get; set; }
+    public DbSet<ShopItem> ShopItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -142,4 +142,32 @@ public class UserController : ControllerBase
         var users = await context.Users.AsNoTracking().ToListAsync();
         return Ok(users);
     }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("admin/users")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListUsersAdmin([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        var result = await _userService.ListUsersAdminAsync(search, page, pageSize);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPut("admin/users/{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateUserAdmin(int id, AdminUserUpdateDto dto)
+    {
+        await _userService.UpdateUserAdminAsync(id, dto);
+        return NoContent();
+    }
 }

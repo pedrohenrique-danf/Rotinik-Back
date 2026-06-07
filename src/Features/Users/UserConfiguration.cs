@@ -42,6 +42,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasDefaultValue(0);
 
+        builder.Property(x => x.Role)
+            .IsRequired()
+            .HasMaxLength(20)
+            .HasDefaultValue("user");
+
         // Mapeamento explícito do relacionamento das Medalhas
         builder.HasMany<Medal>()
         .WithMany()
@@ -58,6 +63,22 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithOne(rt => rt.User)
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasData(
+            new User
+            {
+                Id = 1,
+                Name = "Administrador",
+                UserName = "admin",
+                Email = "admin@rotinik.com",
+                Password = "$2a$11$ah3WykwyffrfPRSXBSynZOnXqdFPrVjJeHB6vTmN47FIn1rPJ.9wq",
+                BirthDate = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                IsPremium = true,
+                Role = "admin",
+                Points = 1000,
+                Coins = 1000
+            }
+        );
 
         builder.HasIndex(x => x.Email).IsUnique();
         builder.HasIndex(x => x.UserName).IsUnique();

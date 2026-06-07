@@ -41,7 +41,7 @@ public class UserService
     {
         var user = await _context.Users
             .Include(u => u.RefreshTokens)
-            .FirstOrDefaultAsync(u => u.Email == dto.Email);
+            .FirstOrDefaultAsync(u => u.Email == dto.Email || u.UserName == dto.Email);
 
         if (user == null || !_passwordHasher.VerifyPassword(dto.Password, user.Password))
             throw new UnauthorizedException("Invalid email or password.");
@@ -154,7 +154,9 @@ public class UserService
             Points = user.Points,
             Coins = user.Coins,
             IsPremium = user.IsPremium,
-            RankPosition = rankPosition
+            RankPosition = rankPosition,
+            Role = user.Role,
+            IsAdmin = user.IsAdmin
         };
     }
 
@@ -230,5 +232,74 @@ public class UserService
             Points = u.Points,
             IsPremium = u.IsPremium
         }).ToList();
+    }
+
+    public async Task<PaginatedResultDto<UserResponseDto>> ListUsersAdminAsync(string? search, int page, int pageSize)
+    {
+        var query = _context.Users.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var cleanSearch = search.Trim().ToLower();
+            query = query.Where(u => u.Name.ToLower().Contains(cleanSearch) || 
+                                     u.UserName.ToLower().Contains(cleanSearch) || 
+                                     u.Email.ToLower().Contains(cleanSearch));
+        }
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderBy(u => u.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var dtos = new List<UserResponseDto>();
+        foreach (var u in items)
+        {
+            var rankPosition = await CalculateUserRankAsync(u.Points);
+            dtos.Add(new UserResponseDto
+            {
+                Id = u.Id,
+                Name = u.Name,
+                UserName = u.UserName,
+                Email = u.Email,
+                BirthDate = u.BirthDate,
+                Points = u.Points,
+                Coins = u.Coins,
+                IsPremium = u.IsPremium,
+                RankPosition = rankPosition,
+                Role = u.Role,
+                IsAdmin = u.IsAdmin
+            });
+        }
+
+        return new PaginatedResultDto<UserResponseDto>
+        {
+            Items = dtos,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task UpdateUserAdminAsync(int id, AdminUserUpdateDto dto)
+    {
+        var user = await GetUserOrThrowAsync(id);
+
+        if (await _context.Users.AnyAsync(u => u.UserName == dto.UserName && u.Id != id))
+            throw new ConflictException("UserName in use.");
+
+        if (await _context.Users.AnyAsync(u => u.Email == dto.Email && u.Id != id))
+            throw new ConflictException("Email in use.");
+
+        user.Name = dto.Name;
+        user.Email = dto.Email;
+        user.UserName = dto.UserName;
+        user.Role = dto.Role;
+        user.Points = dto.Points;
+        user.Coins = dto.Coins;
+        user.IsPremium = dto.IsPremium;
+
+        await _context.SaveChangesAsync();
     }
 }

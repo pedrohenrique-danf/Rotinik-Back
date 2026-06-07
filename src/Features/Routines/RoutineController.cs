@@ -100,4 +100,70 @@ public class RoutineController : ControllerBase
 
         return Ok(snapshot);
     }
+
+    [HttpGet("templates")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTemplates()
+    {
+        var templates = await _routineService.GetTemplatesAsync();
+        return Ok(templates);
+    }
+
+    [HttpPost("templates/{id}/clone")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CloneTemplate(int id)
+    {
+        var currentUserId = User.GetCurrentUserId();
+        var result = await _routineService.CloneTemplateAsync(id, currentUserId);
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("admin/all")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AdminListAllRoutines()
+    {
+        var result = await _routineService.AdminListAllRoutinesAsync();
+        return Ok(result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPost("admin/templates")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> AdminCreateTemplate(AdminRoutineCreateDto dto)
+    {
+        var result = await _routineService.AdminCreateTemplateAsync(dto);
+        return StatusCode(201, result);
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpPut("admin/templates/{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AdminUpdateTemplate(int id, RoutineUpdateDto dto)
+    {
+        await _routineService.AdminUpdateTemplateAsync(id, dto);
+        return NoContent();
+    }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpDelete("admin/templates/{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AdminDeleteTemplate(int id)
+    {
+        await _routineService.AdminDeleteTemplateAsync(id);
+        return NoContent();
+    }
 }
