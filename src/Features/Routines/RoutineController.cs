@@ -73,6 +73,17 @@ public class RoutineController : ControllerBase
 
         var routines = await _routineService.GetUserRoutinesAsync(currentUserId);
 
+        var equipped = await _context.UserShopItems
+            .AsNoTracking()
+            .Include(usi => usi.ShopItem)
+            .Where(usi => usi.UserId == currentUserId && usi.IsEquipped)
+            .ToListAsync();
+
+        var equippedCosmetics = equipped.ToDictionary(
+            usi => usi.ShopItem.Category,
+            usi => usi.ShopItem.Icon
+        );
+
         var level = Math.Max(1, (int)Math.Floor(Math.Sqrt(user.Points / 100.0)) + 1);
         var nextLevelXp = (int)Math.Pow(level, 2) * 100;
         var prevLevelXp = (int)Math.Pow(level - 1, 2) * 100;
@@ -93,7 +104,10 @@ public class RoutineController : ControllerBase
                 totalXp = user.Points,
                 coins = user.Coins,
                 levelProgress,
-                nextLevelXp
+                nextLevelXp,
+                equippedCosmetics,
+                isAdmin = user.IsAdmin,
+                role = user.Role
             },
             routines
         };

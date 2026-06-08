@@ -49,6 +49,9 @@ public class UserService
         if (user == null || !_passwordHasher.VerifyPassword(dto.Password, user.Password))
             throw new UnauthorizedException("Email ou senha inválidos.");
 
+        if (user.IsBanned)
+            throw new UnauthorizedException("Sua conta foi suspensa ou banida pelo administrador.");
+
         // LÓGICA DE RESGATE DE CONTA
         if (user.DeletionScheduledFor.HasValue)
         {
@@ -76,6 +79,9 @@ public class UserService
 
         if (user == null)
             throw new UnauthorizedException("Invalid user.");
+
+        if (user.IsBanned)
+            throw new UnauthorizedException("Sua conta foi suspensa ou banida pelo administrador.");
 
         var incomingToken = dto.RefreshToken;
 
@@ -165,20 +171,22 @@ public class UserService
 
     public async Task<UserResponseDto?> GetCurrentUserAsync(int userId)
     {
-        var user = await _context.Users
-            .Include(u => u.UserShopItems)
-            .ThenInclude(usi => usi.ShopItem)
-            .SingleOrDefaultAsync(u => u.Id == userId);
-            
-        if (user == null)
-            throw new NotFoundException("User not found.");
+        var user = await GetUserOrThrowAsync(userId);
+        if (user.IsBanned)
+            throw new UnauthorizedException("Sua conta foi suspensa ou banida pelo administrador.");
 
         var rankPosition = await CalculateUserRankAsync(user.Points);
 
-        var equippedCosmetics = user.UserShopItems
-            .Where(usi => usi.IsEquipped && usi.ShopItem != null)
-            .GroupBy(usi => usi.ShopItem.Category)
-            .ToDictionary(g => g.Key, g => g.First().ShopItem.Icon);
+        var equipped = await _context.UserShopItems
+            .AsNoTracking()
+            .Include(usi => usi.ShopItem)
+            .Where(usi => usi.UserId == userId && usi.IsEquipped)
+            .ToListAsync();
+
+        var equippedCosmetics = equipped.ToDictionary(
+            usi => usi.ShopItem.Category,
+            usi => usi.ShopItem.Icon
+        );
 
         return new UserResponseDto
         {
@@ -193,6 +201,9 @@ public class UserService
             RankPosition = rankPosition,
             Role = user.Role,
             IsAdmin = user.IsAdmin,
+            IsBanned = user.IsBanned,
+            JoinDate = user.JoinDate,
+            LastActivityDate = user.LastActivityDate,
             EquippedCosmetics = equippedCosmetics
         };
     }
@@ -215,7 +226,7 @@ public class UserService
         return await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return await _context.Users.CountAsync(u => u.Points > userPoints) + 1;
+            return await _context.Users.CountAsync(u => u.Points > userPoints && u.Role != "admin") + 1;
         });
     }
 
@@ -269,7 +280,7 @@ public class UserService
     {
         var topUsers = await _context.Users
             .AsNoTracking()
-            .Where(u => u.DeletionScheduledFor == null) // Filtro crucial
+            .Where(u => u.DeletionScheduledFor == null && u.Role != "admin") // Filtro crucial
             .OrderByDescending(u => u.Points)
             .Take(limit)
             .Select(u => new
@@ -288,6 +299,38 @@ public class UserService
             Points = u.Points,
             IsPremium = u.IsPremium
         }).ToList();
+    }
+
+    public async Task<List<UserPublicDto>> GetPublicUsersAsync()
+    {
+        var users = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.DeletionScheduledFor == null && u.Role != "admin")
+            .ToListAsync();
+
+        var list = new List<UserPublicDto>();
+        foreach (var u in users)
+        {
+            var level = Math.Max(1, (int)Math.Floor(Math.Sqrt(u.Points / 100.0)) + 1);
+            var achievementsCount = await _context.UserMedals.CountAsync(um => um.UserId == u.Id);
+
+            list.Add(new UserPublicDto
+            {
+                Id = u.Id.ToString(),
+                Name = u.Name,
+                UserName = u.UserName,
+                Email = u.Email,
+                Points = u.Points,
+                Level = level,
+                Coins = u.Coins,
+                Achievements = achievementsCount,
+                JoinDate = u.JoinDate,
+                LastActivityDate = u.LastActivityDate,
+                IsFollowed = false
+            });
+        }
+
+        return list;
     }
 
     public async Task<PaginatedResultDto<UserResponseDto>> ListUsersAdminAsync(string? search, int page, int pageSize)
@@ -313,6 +356,18 @@ public class UserService
         foreach (var u in items)
         {
             var rankPosition = await CalculateUserRankAsync(u.Points);
+
+            var equipped = await _context.UserShopItems
+                .AsNoTracking()
+                .Include(usi => usi.ShopItem)
+                .Where(usi => usi.UserId == u.Id && usi.IsEquipped)
+                .ToListAsync();
+
+            var equippedCosmetics = equipped.ToDictionary(
+                usi => usi.ShopItem.Category,
+                usi => usi.ShopItem.Icon
+            );
+
             dtos.Add(new UserResponseDto
             {
                 Id = u.Id,
@@ -325,7 +380,11 @@ public class UserService
                 IsPremium = u.IsPremium,
                 RankPosition = rankPosition,
                 Role = u.Role,
-                IsAdmin = u.IsAdmin
+                IsAdmin = u.IsAdmin,
+                IsBanned = u.IsBanned,
+                JoinDate = u.JoinDate,
+                LastActivityDate = u.LastActivityDate,
+                EquippedCosmetics = equippedCosmetics
             });
         }
 
@@ -355,6 +414,12 @@ public class UserService
         user.Points = dto.Points;
         user.Coins = dto.Coins;
         user.IsPremium = dto.IsPremium;
+        user.IsBanned = dto.IsBanned;
+
+        if (user.IsBanned)
+        {
+            user.RefreshTokens.Clear();
+        }
 
         await _context.SaveChangesAsync();
     }

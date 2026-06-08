@@ -29,6 +29,14 @@ public class ShopService
             
         bool isPremium = user?.IsPremium ?? false;
 
+        var userItems = await _context.UserShopItems
+            .AsNoTracking()
+            .Where(usi => usi.UserId == currentUserId)
+            .ToListAsync();
+
+        var ownedItemIds = userItems.Select(usi => usi.ShopItemId).ToHashSet();
+        var equippedItemIds = userItems.Where(usi => usi.IsEquipped).Select(usi => usi.ShopItemId).ToHashSet();
+
         var items = await _context.ShopItems
             .AsNoTracking()
             .OrderBy(x => x.Id)
@@ -48,8 +56,8 @@ public class ShopService
                 Rarity = x.Rarity,
                 Discount = x.Discount,
                 IsNew = x.IsNew,
-                IsOwned = userItem != null,
-                IsEquipped = userItem?.IsEquipped ?? false
+                IsOwned = ownedItemIds.Contains(x.Id),
+                IsEquipped = equippedItemIds.Contains(x.Id)
             };
 
             if (isPremium)
@@ -198,4 +206,6 @@ public class ShopService
         
         await _context.SaveChangesAsync();
     }
+
+
 }

@@ -94,6 +94,7 @@ public class ShopController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
     [HttpPost("items/{id}/equip")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -111,7 +112,11 @@ public class ShopController : ControllerBase
             await _shopService.EquipItemAsync(id, userId);
             return Ok(new { message = "Item equipado/desequipado com sucesso!" });
         }
-        catch (InvalidOperationException ex)
+        catch (System.Exception ex) when (ex is Core.Exceptions.NotFoundException)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (System.Exception ex) when (ex is Core.Exceptions.BadRequestException || ex is System.InvalidOperationException)
         {
             return BadRequest(new { message = ex.Message });
         }

@@ -47,6 +47,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(20)
             .HasDefaultValue("user");
 
+        builder.Property(x => x.JoinDate)
+            .IsRequired()
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        builder.Property(x => x.LastActivityDate)
+            .IsRequired()
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
         // Mapeamento explícito do relacionamento das Medalhas
         builder.HasMany<Medal>()
         .WithMany()
@@ -76,7 +84,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 IsPremium = true,
                 Role = "admin",
                 Points = 1000,
-                Coins = 1000
+                Coins = 1000,
+                JoinDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                LastActivityDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
 
