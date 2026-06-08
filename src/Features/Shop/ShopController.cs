@@ -23,7 +23,11 @@ public class ShopController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> ListItems()
     {
-        var result = await _shopService.ListAllItemsAsync();
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdString, out int userId))
+            return Unauthorized();
+
+        var result = await _shopService.ListAllItemsAsync(userId);
         return Ok(result);
     }
 

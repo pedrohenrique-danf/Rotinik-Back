@@ -135,6 +135,17 @@ public class UserController : ControllerBase
         });
     }
 
+    [Authorize]
+    [HttpPost("upgrade-premium")]
+    [Tags(PremiumTag)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpgradePremium()
+    {
+        var currentUserId = User.GetCurrentUserId();
+        await _userService.UpgradeToPremiumAsync(currentUserId);
+        return Ok(new { message = "Seja bem-vindo ao Premium!" });
+    }
+
     [HttpGet("debug-list")]
     [AllowAnonymous]
     public async Task<IActionResult> DebugList([FromServices] Rotinik.Core.Data.AppDbContext context)

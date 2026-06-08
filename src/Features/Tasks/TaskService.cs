@@ -50,11 +50,44 @@ public class TaskService
         _ => (10, 5)
     };
 
+    private async Task VerifyTaskLimitsAsync(int routineId, int userId, TaskPriority newPriority, TaskPriority? oldPriority = null)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return;
+
+        bool isPremium = user.IsPremium;
+        int maxTotalTasks = isPremium ? 30 : 10;
+        int maxUrgent = isPremium ? 6 : 3;
+        int maxImportant = isPremium ? 10 : 5;
+
+        var tasks = await _context.Tasks.Where(t => t.RoutineId == routineId).ToListAsync();
+
+        if (oldPriority == null)
+        {
+            if (tasks.Count >= maxTotalTasks)
+                throw new BadRequestException($"Limit reached. You can only create up to {maxTotalTasks} tasks per routine. {(isPremium ? "" : "Upgrade to Premium for more!")}");
+        }
+
+        if (newPriority == TaskPriority.Urgent && oldPriority != TaskPriority.Urgent)
+        {
+            if (tasks.Count(t => t.Priority == TaskPriority.Urgent) >= maxUrgent)
+                throw new BadRequestException($"Limit reached. You can only create up to {maxUrgent} Urgent tasks per routine. {(isPremium ? "" : "Upgrade to Premium for more!")}");
+        }
+
+        if (newPriority == TaskPriority.Important && oldPriority != TaskPriority.Important)
+        {
+            if (tasks.Count(t => t.Priority == TaskPriority.Important) >= maxImportant)
+                throw new BadRequestException($"Limit reached. You can only create up to {maxImportant} Important tasks per routine. {(isPremium ? "" : "Upgrade to Premium for more!")}");
+        }
+    }
+
     public async Task<TaskResponseDto> CreateTaskAsync(int routineId, int currentUserId, TaskCreateDto dto, bool isAdmin = false)
     {
         await VerifyRoutineOwnershipAsync(routineId, currentUserId, isAdmin);
 
         var priority = MapImportance(dto.Importance);
+        await VerifyTaskLimitsAsync(routineId, currentUserId, priority);
+
         var (xp, coins) = GetBaseRewardsForPriority(priority);
 
         var task = new TaskItem
@@ -89,10 +122,15 @@ public class TaskService
         if (dto.Frequency.HasValue) task.Frequency = dto.Frequency.Value;
         if (!string.IsNullOrEmpty(dto.Importance)) 
         {
-            task.Priority = MapImportance(dto.Importance);
-            var (xp, coins) = GetBaseRewardsForPriority(task.Priority);
-            task.XpReward = xp;
-            task.CoinReward = coins;
+            var newPriority = MapImportance(dto.Importance);
+            if (newPriority != task.Priority)
+            {
+                await VerifyTaskLimitsAsync(routineId, currentUserId, newPriority, task.Priority);
+                task.Priority = newPriority;
+                var (xp, coins) = GetBaseRewardsForPriority(task.Priority);
+                task.XpReward = xp;
+                task.CoinReward = coins;
+            }
         }
         if (!string.IsNullOrWhiteSpace(dto.DeadlineValue)) task.DeadlineValue = dto.DeadlineValue;
 

@@ -42,8 +42,24 @@ public class RoutineService
         return routine.ToResponseDto();
     }
 
+    private async Task VerifyRoutineLimitAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return;
+
+        var routineCount = await _context.Routines.CountAsync(r => r.UserId == userId);
+        int maxRoutines = user.IsPremium ? 15 : 5;
+
+        if (routineCount >= maxRoutines)
+        {
+            throw new BadRequestException($"Limit reached. You can only create up to {maxRoutines} routines. {(user.IsPremium ? "" : "Upgrade to Premium for more!")}");
+        }
+    }
+
     public async Task<RoutineResponseDto> CreateRoutineAsync(int currentUserId, RoutineCreateDto dto)
     {
+        await VerifyRoutineLimitAsync(currentUserId);
+
         var routine = new Routine
         {
             Title = dto.Title,
@@ -170,6 +186,8 @@ public class RoutineService
 
     public async Task<RoutineResponseDto> CloneTemplateAsync(int templateId, int userId)
     {
+        await VerifyRoutineLimitAsync(userId);
+
         var template = await _context.Routines
             .Include(r => r.Tasks)
             .FirstOrDefaultAsync(r => r.Id == templateId && r.IsDefault);

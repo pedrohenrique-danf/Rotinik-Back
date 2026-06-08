@@ -160,6 +160,16 @@ public class UserService
         };
     }
 
+    public async Task UpgradeToPremiumAsync(int userId)
+    {
+        var user = await GetUserOrThrowAsync(userId);
+        if (user.IsPremium)
+            throw new BadRequestException("User is already premium.");
+
+        user.IsPremium = true;
+        await _context.SaveChangesAsync();
+    }
+
     private async Task<int> CalculateUserRankAsync(int userPoints)
     {
         var cacheKey = $"UserRank_{userPoints}";

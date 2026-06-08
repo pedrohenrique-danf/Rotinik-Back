@@ -17,12 +17,18 @@ public class ShopService
         _context = context;
     }
 
-    public async Task<List<ShopItemResponseDto>> ListAllItemsAsync()
+    public async Task<List<ShopItemResponseDto>> ListAllItemsAsync(int currentUserId)
     {
+        var user = await _context.Users.FindAsync(currentUserId);
+        bool isPremium = user?.IsPremium ?? false;
+
         var items = await _context.ShopItems
             .AsNoTracking()
             .OrderBy(x => x.Id)
-            .Select(x => new ShopItemResponseDto
+            .ToListAsync();
+
+        return items.Select(x => {
+            var dto = new ShopItemResponseDto
             {
                 Id = x.Id,
                 Name = x.Name,
@@ -33,10 +39,16 @@ public class ShopService
                 Rarity = x.Rarity,
                 Discount = x.Discount,
                 IsNew = x.IsNew
-            })
-            .ToListAsync();
+            };
 
-        return items;
+            if (isPremium)
+            {
+                double currentDiscount = dto.Discount ?? 0.0;
+                dto.Discount = System.Math.Max(currentDiscount, 15.0);
+            }
+
+            return dto;
+        }).ToList();
     }
 
     public async Task<ShopItemResponseDto> CreateItemAsync(ShopItemCreateDto dto)
