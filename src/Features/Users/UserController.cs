@@ -76,14 +76,16 @@ public class UserController : ControllerBase
     [Authorize]
     [HttpDelete("{id}")]
     [Tags(AccountTag)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteUser(int id)
     {
         var currentUserId = User.GetCurrentUserId();
         await _userService.DeleteUserAsync(id, currentUserId);
-        return NoContent();
+        
+        // Alterado de NoContent() para Ok() para retornar a mensagem de aviso dos 30 dias
+        return Ok(new { message = "Sua conta foi agendada para exclusão e será removida em 30 dias. Para cancelar, basta fazer login novamente." });
     }
 
     [Authorize]

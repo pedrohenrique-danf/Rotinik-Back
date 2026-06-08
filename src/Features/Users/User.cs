@@ -14,5 +14,8 @@ public class User
     public string Role { get; set; } = "user";
     public bool IsAdmin => Role == "admin";
 
+    // O cronômetro de 30 dias para a exclusão física
+    public DateTime? DeletionScheduledFor { get; set; }
+
     public ICollection<UserRefreshToken> RefreshTokens { get; set; } = new List<UserRefreshToken>();
 }
