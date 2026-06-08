@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rotinik.Core.Data;
@@ -11,9 +12,11 @@ using Rotinik.Core.Data;
 namespace Rotinik.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607230249_AddTaskHistory")]
+    partial class AddTaskHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -72,6 +75,43 @@ namespace Rotinik.Migrations
                     b.HasIndex("MedalId");
 
                     b.ToTable("UserMedals", (string)null);
+                });
+
+            modelBuilder.Entity("Rotinik.Features.Payments.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("Rotinik.Features.Routines.Routine", b =>
@@ -557,44 +597,6 @@ namespace Rotinik.Migrations
                     b.ToTable("UserRefreshTokens");
                 });
 
-            modelBuilder.Entity("Rotinik.Features.Wallet.WalletTransaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Amount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Currency")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
-
-                    b.Property<int>("Source")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("WalletTransactions", (string)null);
-                });
-
             modelBuilder.Entity("Rotinik.Features.Medals.UserMedal", b =>
                 {
                     b.HasOne("Medal", "Medal")
@@ -614,6 +616,17 @@ namespace Rotinik.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Rotinik.Features.Payments.Payment", b =>
+                {
+                    b.HasOne("Rotinik.Features.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Rotinik.Features.Routines.Routine", b =>
                 {
                     b.HasOne("Rotinik.Features.Users.User", "User")
@@ -624,26 +637,18 @@ namespace Rotinik.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Rotinik.Features.Shop.UserShopItem", b =>
+            modelBuilder.Entity("Rotinik.Features.Statistics.DailyUserSummary", b =>
                 {
-                    b.HasOne("Rotinik.Features.Shop.ShopItem", "ShopItem")
-                        .WithMany()
-                        .HasForeignKey("ShopItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Rotinik.Features.Users.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ShopItem");
-
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Rotinik.Features.Statistics.DailyUserSummary", b =>
+            modelBuilder.Entity("Rotinik.Features.Statistics.WalletTransaction", b =>
                 {
                     b.HasOne("Rotinik.Features.Users.User", "User")
                         .WithMany()
@@ -688,17 +693,6 @@ namespace Rotinik.Migrations
                 {
                     b.HasOne("Rotinik.Features.Users.User", "User")
                         .WithMany("RefreshTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Rotinik.Features.Wallet.WalletTransaction", b =>
-                {
-                    b.HasOne("Rotinik.Features.Users.User", "User")
-                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

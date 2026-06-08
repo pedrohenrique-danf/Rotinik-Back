@@ -42,21 +42,33 @@ public class TaskService
             throw new ForbiddenException("Forbidden: You can only modify tasks in your own routines.");
     }
 
+    private (int xp, int coins) GetBaseRewardsForPriority(TaskPriority priority) => priority switch
+    {
+        TaskPriority.Low => (10, 5),
+        TaskPriority.Moderate => (20, 10),
+        TaskPriority.Important => (30, 15),
+        TaskPriority.Urgent => (50, 25),
+        _ => (10, 5)
+    };
+
     public async Task<TaskResponseDto> CreateTaskAsync(int routineId, int currentUserId, TaskCreateDto dto, bool isAdmin = false)
     {
         await VerifyRoutineOwnershipAsync(routineId, currentUserId, isAdmin);
+
+        var priority = MapImportance(dto.Importance);
+        var (xp, coins) = GetBaseRewardsForPriority(priority);
 
         var task = new TaskItem
         {
             Title = dto.Title,
             Description = dto.Description ?? string.Empty,
             Frequency = dto.Frequency,
-            Priority = MapImportance(dto.Importance),
+            Priority = priority,
             DeadlineValue = dto.DeadlineValue,
             IsCompleted = false,
             CompletedAt = null,
-            XpReward = dto.XpReward > 0 ? dto.XpReward : 10,
-            CoinReward = dto.CoinReward > 0 ? dto.CoinReward : 5,
+            XpReward = xp,
+            CoinReward = coins,
             RoutineId = routineId
         };
 
@@ -76,7 +88,13 @@ public class TaskService
         if (!string.IsNullOrWhiteSpace(dto.Title)) task.Title = dto.Title;
         if (dto.Description != null) task.Description = dto.Description;
         if (dto.Frequency.HasValue) task.Frequency = dto.Frequency.Value;
-        if (!string.IsNullOrEmpty(dto.Importance)) task.Priority = MapImportance(dto.Importance);
+        if (!string.IsNullOrEmpty(dto.Importance)) 
+        {
+            task.Priority = MapImportance(dto.Importance);
+            var (xp, coins) = GetBaseRewardsForPriority(task.Priority);
+            task.XpReward = xp;
+            task.CoinReward = coins;
+        }
         if (!string.IsNullOrWhiteSpace(dto.DeadlineValue)) task.DeadlineValue = dto.DeadlineValue;
 
         await _context.SaveChangesAsync();
@@ -132,6 +150,15 @@ public class TaskService
             int pointsToAward = task.XpReward;
             int coinsToAward = task.CoinReward;
 
+            if (!string.IsNullOrWhiteSpace(task.DeadlineValue) && TimeOnly.TryParse(task.DeadlineValue, out var deadlineTime))
+            {
+                var localTime = TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(-3));
+                if (localTime <= deadlineTime)
+                {
+                    coinsToAward += (int)(coinsToAward * 0.5); // Bônus de 50%
+                }
+            }
+
             if (dailySummary.PointsEarned + pointsToAward > MaxDailyPoints)
                 pointsToAward = Math.Max(0, MaxDailyPoints - dailySummary.PointsEarned);
 
@@ -140,6 +167,16 @@ public class TaskService
 
             task.IsCompleted = true;
             task.CompletedAt = DateTime.UtcNow;
+
+            _context.TaskHistories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = currentUserId,
+                Status = TaskHistoryStatus.Completed,
+                Date = DateTime.UtcNow,
+                XpEarned = pointsToAward,
+                CoinsEarned = coinsToAward
+            });
 
             user.Points += pointsToAward;
             user.Coins += coinsToAward;

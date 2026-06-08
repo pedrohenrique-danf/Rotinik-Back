@@ -90,10 +90,69 @@ public class RoutineService
     public async Task<List<RoutineResponseDto>> GetUserRoutinesAsync(int currentUserId)
     {
         var routines = await _context.Routines
-            .AsNoTracking()
             .Include(r => r.Tasks)
             .Where(r => r.UserId == currentUserId)
             .ToListAsync();
+
+        bool hasChanges = false;
+        var now = DateTime.UtcNow;
+        var localNow = now.AddHours(-3);
+
+        foreach (var routine in routines)
+        {
+            foreach (var task in routine.Tasks)
+            {
+                var cycleStartLocal = task.CreatedAt.AddHours(-3);
+                bool shouldReset = false;
+
+                if (routine.Frequency.Equals("daily", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (localNow.Date > cycleStartLocal.Date)
+                        shouldReset = true;
+                }
+                else if (routine.Frequency.Equals("weekly", StringComparison.OrdinalIgnoreCase))
+                {
+                    int daysSinceStart = (localNow.Date - cycleStartLocal.Date).Days;
+                    int startDayOfWeek = (int)cycleStartLocal.DayOfWeek;
+                    if (daysSinceStart > 0 && (daysSinceStart >= 7 || localNow.DayOfWeek == DayOfWeek.Sunday || (startDayOfWeek != 0 && (startDayOfWeek + daysSinceStart) >= 7)))
+                    {
+                        shouldReset = true;
+                    }
+                }
+                else if (routine.Frequency.Equals("monthly", StringComparison.OrdinalIgnoreCase))
+                {
+                    if ((localNow - cycleStartLocal).TotalDays >= 30)
+                        shouldReset = true;
+                }
+
+                if (shouldReset)
+                {
+                    if (!task.IsCompleted)
+                    {
+                        _context.Set<Rotinik.Features.Tasks.TaskHistory>().Add(new Rotinik.Features.Tasks.TaskHistory
+                        {
+                            TaskId = task.Id,
+                            UserId = currentUserId,
+                            Status = Rotinik.Features.Tasks.TaskHistoryStatus.Failed,
+                            Date = now,
+                            XpEarned = 0,
+                            CoinsEarned = 0
+                        });
+                    }
+
+                    task.IsCompleted = false;
+                    task.CompletedAt = null;
+                    task.StartedAt = null;
+                    task.CreatedAt = now;
+                    hasChanges = true;
+                }
+            }
+        }
+
+        if (hasChanges)
+        {
+            await _context.SaveChangesAsync();
+        }
 
         return routines.Select(r => r.ToResponseDto()).ToList();
     }
