@@ -21,7 +21,10 @@ public class ShopService
 
     public async Task<List<ShopItemResponseDto>> ListAllItemsAsync(int currentUserId)
     {
-        var user = await _context.Users.FindAsync(currentUserId);
+        var user = await _context.Users
+            .Include(u => u.UserShopItems)
+            .SingleOrDefaultAsync(u => u.Id == currentUserId);
+            
         bool isPremium = user?.IsPremium ?? false;
 
         var items = await _context.ShopItems
@@ -30,6 +33,8 @@ public class ShopService
             .ToListAsync();
 
         return items.Select(x => {
+            var userItem = user?.UserShopItems.SingleOrDefault(usi => usi.ShopItemId == x.Id);
+            
             var dto = new ShopItemResponseDto
             {
                 Id = x.Id,
@@ -40,7 +45,9 @@ public class ShopService
                 Price = x.Price,
                 Rarity = x.Rarity,
                 Discount = x.Discount,
-                IsNew = x.IsNew
+                IsNew = x.IsNew,
+                IsOwned = userItem != null,
+                IsEquipped = userItem?.IsEquipped ?? false
             };
 
             if (isPremium)
@@ -157,6 +164,35 @@ public class ShopService
 
         // --- FIM DO BLOCO ATÔMICO ---
 
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task EquipItemAsync(int shopItemId, int userId)
+    {
+        var inventoryItem = await _context.UserShopItems
+            .Include(usi => usi.ShopItem)
+            .SingleOrDefaultAsync(usi => usi.ShopItemId == shopItemId && usi.UserId == userId);
+
+        if (inventoryItem == null)
+            throw new InvalidOperationException("Você não possui este item.");
+
+        var category = inventoryItem.ShopItem.Category;
+        bool wasEquipped = inventoryItem.IsEquipped;
+
+        // Desequipar itens da mesma categoria
+        var equippedInCategory = await _context.UserShopItems
+            .Include(usi => usi.ShopItem)
+            .Where(usi => usi.UserId == userId && usi.IsEquipped && usi.ShopItem.Category == category)
+            .ToListAsync();
+
+        foreach (var equipped in equippedInCategory)
+        {
+            equipped.IsEquipped = false;
+        }
+
+        // Se já estava equipado antes, deixamos desequipado. Se não, equipamos ele.
+        inventoryItem.IsEquipped = !wasEquipped;
+        
         await _context.SaveChangesAsync();
     }
 }

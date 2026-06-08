@@ -7,4 +7,7 @@ public class UserProfileDto
     public int Points { get; set; }
     public bool IsPremium { get; set; }
     public int RankPosition { get; set; }
+    
+    // Key: Category, Value: Icon/CSS value
+    public Dictionary<string, string> EquippedCosmetics { get; set; } = new();
 }

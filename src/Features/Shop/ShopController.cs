@@ -94,4 +94,26 @@ public class ShopController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+    [HttpPost("items/{id}/equip")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> EquipItem(int id)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            return Unauthorized();
+
+        try
+        {
+            await _shopService.EquipItemAsync(id, userId);
+            return Ok(new { message = "Item equipado/desequipado com sucesso!" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

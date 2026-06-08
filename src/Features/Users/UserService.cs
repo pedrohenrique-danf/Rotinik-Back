@@ -123,11 +123,20 @@ public class UserService
 
     public async Task<UserProfileDto?> GetPublicProfileAsync(string username)
     {
-        var user = await _context.Users.SingleOrDefaultAsync(u => u.UserName == username);
+        var user = await _context.Users
+            .Include(u => u.UserShopItems)
+            .ThenInclude(usi => usi.ShopItem)
+            .SingleOrDefaultAsync(u => u.UserName == username);
+            
         if (user == null)
             throw new NotFoundException("User not found.");
 
         var rankPosition = await CalculateUserRankAsync(user.Points);
+
+        var equippedCosmetics = user.UserShopItems
+            .Where(usi => usi.IsEquipped && usi.ShopItem != null)
+            .GroupBy(usi => usi.ShopItem.Category)
+            .ToDictionary(g => g.Key, g => g.First().ShopItem.Icon);
 
         return new UserProfileDto
         {
@@ -135,14 +144,27 @@ public class UserService
             UserName = user.UserName,
             Points = user.Points,
             IsPremium = user.IsPremium,
-            RankPosition = rankPosition
+            RankPosition = rankPosition,
+            EquippedCosmetics = equippedCosmetics
         };
     }
 
     public async Task<UserResponseDto?> GetCurrentUserAsync(int userId)
     {
-        var user = await GetUserOrThrowAsync(userId);
+        var user = await _context.Users
+            .Include(u => u.UserShopItems)
+            .ThenInclude(usi => usi.ShopItem)
+            .SingleOrDefaultAsync(u => u.Id == userId);
+            
+        if (user == null)
+            throw new NotFoundException("User not found.");
+
         var rankPosition = await CalculateUserRankAsync(user.Points);
+
+        var equippedCosmetics = user.UserShopItems
+            .Where(usi => usi.IsEquipped && usi.ShopItem != null)
+            .GroupBy(usi => usi.ShopItem.Category)
+            .ToDictionary(g => g.Key, g => g.First().ShopItem.Icon);
 
         return new UserResponseDto
         {
@@ -156,7 +178,8 @@ public class UserService
             IsPremium = user.IsPremium,
             RankPosition = rankPosition,
             Role = user.Role,
-            IsAdmin = user.IsAdmin
+            IsAdmin = user.IsAdmin,
+            EquippedCosmetics = equippedCosmetics
         };
     }
 

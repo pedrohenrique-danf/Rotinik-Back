@@ -13,4 +13,7 @@ public class UserResponseDto
     public int RankPosition { get; set; }
     public string Role { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
+    
+    // Key: Category, Value: Icon/CSS value
+    public Dictionary<string, string> EquippedCosmetics { get; set; } = new();
 }

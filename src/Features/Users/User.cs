@@ -15,4 +15,7 @@ public class User
     public bool IsAdmin => Role == "admin";
 
     public ICollection<UserRefreshToken> RefreshTokens { get; set; } = new List<UserRefreshToken>();
+    
+    // Virtual nav
+    public virtual ICollection<Rotinik.Features.Shop.UserShopItem> UserShopItems { get; set; } = new List<Rotinik.Features.Shop.UserShopItem>();
 }

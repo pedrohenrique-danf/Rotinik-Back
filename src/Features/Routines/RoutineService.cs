@@ -52,7 +52,10 @@ public class RoutineService
 
         if (routineCount >= maxRoutines)
         {
-            throw new BadRequestException($"Limit reached. You can only create up to {maxRoutines} routines. {(user.IsPremium ? "" : "Upgrade to Premium for more!")}");
+            string message = user.IsPremium 
+                ? $"Limite atingido. Você atingiu o limite máximo de {maxRoutines} rotinas do plano Premium." 
+                : $"Limite atingido. Você só pode criar até {maxRoutines} rotinas. Assine o Premium para mais!";
+            throw new BadRequestException(message);
         }
     }
 

@@ -66,19 +66,34 @@ public class TaskService
         if (oldPriority == null)
         {
             if (tasks.Count >= maxTotalTasks)
-                throw new BadRequestException($"Limit reached. You can only create up to {maxTotalTasks} tasks per routine. {(isPremium ? "" : "Upgrade to Premium for more!")}");
+            {
+                string msg = isPremium 
+                    ? $"Limite atingido. Você atingiu o limite máximo de {maxTotalTasks} tarefas por rotina do plano Premium." 
+                    : $"Limite atingido. Você só pode criar até {maxTotalTasks} tarefas por rotina. Assine o Premium para mais!";
+                throw new BadRequestException(msg);
+            }
         }
 
         if (newPriority == TaskPriority.Urgent && oldPriority != TaskPriority.Urgent)
         {
             if (tasks.Count(t => t.Priority == TaskPriority.Urgent) >= maxUrgent)
-                throw new BadRequestException($"Limit reached. You can only create up to {maxUrgent} Urgent tasks per routine. {(isPremium ? "" : "Upgrade to Premium for more!")}");
+            {
+                string msg = isPremium 
+                    ? $"Limite atingido. Você atingiu o limite máximo de {maxUrgent} tarefas Críticas por rotina do plano Premium." 
+                    : $"Limite atingido. Você só pode criar até {maxUrgent} tarefas Críticas por rotina. Assine o Premium para mais!";
+                throw new BadRequestException(msg);
+            }
         }
 
         if (newPriority == TaskPriority.Important && oldPriority != TaskPriority.Important)
         {
             if (tasks.Count(t => t.Priority == TaskPriority.Important) >= maxImportant)
-                throw new BadRequestException($"Limit reached. You can only create up to {maxImportant} Important tasks per routine. {(isPremium ? "" : "Upgrade to Premium for more!")}");
+            {
+                string msg = isPremium 
+                    ? $"Limite atingido. Você atingiu o limite máximo de {maxImportant} tarefas Altas por rotina do plano Premium." 
+                    : $"Limite atingido. Você só pode criar até {maxImportant} tarefas Altas por rotina. Assine o Premium para mais!";
+                throw new BadRequestException(msg);
+            }
         }
     }
 
