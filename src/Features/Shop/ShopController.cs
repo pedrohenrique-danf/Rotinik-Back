@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Rotinik.Features.Shop.DTOs;
+using System.Security.Claims;
 
 namespace Rotinik.Features.Shop;
 
@@ -62,5 +63,31 @@ public class ShopController : ControllerBase
     {
         await _shopService.DeleteItemAsync(id);
         return NoContent();
+    }
+    
+    [HttpPost("items/{id}/purchase")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PurchaseItem(int id)
+    {
+        // Extrai o ID como string do Token
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        // Converte para int com segurança
+        if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out int userId))
+            return Unauthorized();
+
+        try
+        {
+            // Agora passamos int e int
+            await _shopService.PurchaseItemAsync(id, userId);
+            return Ok(new { message = "Compra realizada com sucesso!" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

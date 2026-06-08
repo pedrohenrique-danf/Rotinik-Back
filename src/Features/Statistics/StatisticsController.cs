@@ -4,6 +4,7 @@ using Rotinik.Core.Extensions;
 using Rotinik.Features.Statistics.DTOs;
 
 namespace Rotinik.Features.Statistics;
+using Rotinik.Features.Wallet;
 
 [Authorize]
 [Route("api/statistics")]
