@@ -190,6 +190,8 @@ public class UserService
             Role = user.Role,
             IsAdmin = user.IsAdmin,
             IsBanned = user.IsBanned,
+            JoinDate = user.JoinDate,
+            LastActivityDate = user.LastActivityDate,
             EquippedCosmetics = equippedCosmetics
         };
     }
@@ -211,7 +213,7 @@ public class UserService
         return await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return await _context.Users.CountAsync(u => u.Points > userPoints) + 1;
+            return await _context.Users.CountAsync(u => u.Points > userPoints && u.Role != "admin") + 1;
         });
     }
 
@@ -264,7 +266,7 @@ public class UserService
     {
         var topUsers = await _context.Users
             .AsNoTracking()
-            .Where(u => u.DeletionScheduledFor == null) // Filtro crucial
+            .Where(u => u.DeletionScheduledFor == null && u.Role != "admin") // Filtro crucial
             .OrderByDescending(u => u.Points)
             .Take(limit)
             .Select(u => new
@@ -283,6 +285,38 @@ public class UserService
             Points = u.Points,
             IsPremium = u.IsPremium
         }).ToList();
+    }
+
+    public async Task<List<UserPublicDto>> GetPublicUsersAsync()
+    {
+        var users = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.DeletionScheduledFor == null && u.Role != "admin")
+            .ToListAsync();
+
+        var list = new List<UserPublicDto>();
+        foreach (var u in users)
+        {
+            var level = Math.Max(1, (int)Math.Floor(Math.Sqrt(u.Points / 100.0)) + 1);
+            var achievementsCount = await _context.UserMedals.CountAsync(um => um.UserId == u.Id);
+
+            list.Add(new UserPublicDto
+            {
+                Id = u.Id.ToString(),
+                Name = u.Name,
+                UserName = u.UserName,
+                Email = u.Email,
+                Points = u.Points,
+                Level = level,
+                Coins = u.Coins,
+                Achievements = achievementsCount,
+                JoinDate = u.JoinDate,
+                LastActivityDate = u.LastActivityDate,
+                IsFollowed = false
+            });
+        }
+
+        return list;
     }
 
     public async Task<PaginatedResultDto<UserResponseDto>> ListUsersAdminAsync(string? search, int page, int pageSize)
@@ -334,6 +368,8 @@ public class UserService
                 Role = u.Role,
                 IsAdmin = u.IsAdmin,
                 IsBanned = u.IsBanned,
+                JoinDate = u.JoinDate,
+                LastActivityDate = u.LastActivityDate,
                 EquippedCosmetics = equippedCosmetics
             });
         }

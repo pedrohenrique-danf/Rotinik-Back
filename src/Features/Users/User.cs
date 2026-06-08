@@ -18,5 +18,8 @@ public class User
     // O cronômetro de 30 dias para a exclusão física
     public DateTime? DeletionScheduledFor { get; set; }
 
+    public DateTime JoinDate { get; set; } = DateTime.UtcNow;
+    public DateTime LastActivityDate { get; set; } = DateTime.UtcNow;
+
     public ICollection<UserRefreshToken> RefreshTokens { get; set; } = new List<UserRefreshToken>();
 }

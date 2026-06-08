@@ -183,4 +183,13 @@ public class UserController : ControllerBase
         await _userService.UpdateUserAdminAsync(id, dto);
         return NoContent();
     }
+
+    [HttpGet("/api/usuarios")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUsuarios()
+    {
+        var result = await _userService.GetPublicUsersAsync();
+        return Ok(result);
+    }
 }

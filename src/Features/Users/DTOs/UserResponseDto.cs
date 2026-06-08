@@ -14,5 +14,7 @@ public class UserResponseDto
     public string Role { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
     public bool IsBanned { get; set; }
+    public DateTime JoinDate { get; set; }
+    public DateTime LastActivityDate { get; set; }
     public System.Collections.Generic.Dictionary<string, string> EquippedCosmetics { get; set; } = new();
 }
