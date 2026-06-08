@@ -144,8 +144,8 @@ public class UserController : ControllerBase
     public async Task<IActionResult> UpgradePremium()
     {
         var currentUserId = User.GetCurrentUserId();
-        await _userService.UpgradeToPremiumAsync(currentUserId);
-        return Ok(new { message = "Seja bem-vindo ao Premium!" });
+        var unlockedMedals = await _userService.UpgradeToPremiumAsync(currentUserId);
+        return Ok(new { message = "Seja bem-vindo ao Premium!", newlyUnlockedMedals = unlockedMedals });
     }
 
     [HttpGet("debug-list")]

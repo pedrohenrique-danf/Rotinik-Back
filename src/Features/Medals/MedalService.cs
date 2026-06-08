@@ -7,6 +7,7 @@ namespace Rotinik.Features.Medals;
 public class MedalService
 {
     private readonly AppDbContext _context;
+    public AppDbContext Context => _context;
 
     public MedalService(AppDbContext context)
     {
@@ -114,6 +115,43 @@ public class MedalService
 
         if (medalsWon.Any())
         {
+            var userToReward = await _context.Users.FindAsync(userId);
+            if (userToReward != null)
+            {
+                foreach (var m in medalsWon)
+                {
+                    if (m.RewardPoints > 0)
+                    {
+                        userToReward.Points += m.RewardPoints;
+                        _context.Set<Rotinik.Features.Wallet.WalletTransaction>().Add(new Rotinik.Features.Wallet.WalletTransaction
+                        {
+                            UserId = userId,
+                            Amount = m.RewardPoints,
+                            Currency = Rotinik.Features.Wallet.CurrencyType.Points,
+                            Type = Rotinik.Features.Wallet.TransactionType.Earned,
+                            Source = Rotinik.Features.Wallet.TransactionSource.Medal,
+                            Description = $"Medalha: {m.Name}",
+                            CreatedAt = DateTime.UtcNow
+                        });
+                    }
+
+                    if (m.RewardCoins > 0)
+                    {
+                        userToReward.Coins += m.RewardCoins;
+                        _context.Set<Rotinik.Features.Wallet.WalletTransaction>().Add(new Rotinik.Features.Wallet.WalletTransaction
+                        {
+                            UserId = userId,
+                            Amount = m.RewardCoins,
+                            Currency = Rotinik.Features.Wallet.CurrencyType.Coins,
+                            Type = Rotinik.Features.Wallet.TransactionType.Earned,
+                            Source = Rotinik.Features.Wallet.TransactionSource.Medal,
+                            Description = $"Medalha: {m.Name}",
+                            CreatedAt = DateTime.UtcNow
+                        });
+                    }
+                }
+            }
+
             var userMedalsToAdd = medalsWon.Select(m => new UserMedal
             {
                 UserId = userId,

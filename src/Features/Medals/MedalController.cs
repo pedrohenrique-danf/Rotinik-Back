@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Extensions;
 using Rotinik.Features.Medals.DTOs;
 
@@ -26,6 +27,25 @@ public class MedalController : ControllerBase
         var medals = await _medalService.GetUserMedalsAsync(currentUserId);
 
         return Ok(new { data = medals });
+    }
+
+    [HttpGet("debug-evaluate")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DebugEvaluate()
+    {
+        var results = new List<object>();
+        var users = await _medalService.Context.Users.ToListAsync();
+        foreach (var u in users) 
+        {
+            var count = await _medalService.Context.Tasks.CountAsync(t => t.Routine.UserId == u.Id && t.IsCompleted);
+            var existing = await _medalService.Context.Set<UserMedal>().Where(um => um.UserId == u.Id).Select(um => um.MedalId).ToListAsync();
+            var candidates = await _medalService.Context.Medals.AsNoTracking()
+                .Where(m => m.TriggerType == MedalTriggerType.TasksCompleted && !existing.Contains(m.Id))
+                .ToListAsync();
+            var won = candidates.Where(m => count >= m.TargetValue).ToList();
+            results.Add(new { UserId = u.Id, UserName = u.UserName, Tasks = count, Existing = existing, MedalsWonNow = won.Select(w => w.Name) });
+        }
+        return Ok(results);
     }
 
     [HttpGet("all")]

@@ -19,4 +19,7 @@ public class Medal
     
     public MedalTriggerType TriggerType { get; set; } 
     public int TargetValue { get; set; }
+    
+    public int RewardPoints { get; set; } = 50;
+    public int RewardCoins { get; set; } = 20;
 }

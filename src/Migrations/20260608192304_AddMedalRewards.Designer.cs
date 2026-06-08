@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rotinik.Core.Data;
@@ -11,9 +12,11 @@ using Rotinik.Core.Data;
 namespace Rotinik.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260608192304_AddMedalRewards")]
+    partial class AddMedalRewards
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,7 +71,7 @@ namespace Rotinik.Migrations
                             Description = "Conclua sua 1ª tarefa.",
                             IconUrl = "🎯",
                             Name = "Primeiro Passo",
-                            RewardCoins = 10,
+                            RewardCoins = 20,
                             RewardPoints = 50,
                             TargetValue = 1,
                             TriggerType = 2
@@ -79,8 +82,8 @@ namespace Rotinik.Migrations
                             Description = "Conclua 10 tarefas.",
                             IconUrl = "⚡",
                             Name = "Produtivo",
-                            RewardCoins = 50,
-                            RewardPoints = 100,
+                            RewardCoins = 20,
+                            RewardPoints = 50,
                             TargetValue = 10,
                             TriggerType = 2
                         },
@@ -90,8 +93,8 @@ namespace Rotinik.Migrations
                             Description = "Conclua 50 tarefas.",
                             IconUrl = "🔥",
                             Name = "Máquina de Tarefas",
-                            RewardCoins = 200,
-                            RewardPoints = 500,
+                            RewardCoins = 20,
+                            RewardPoints = 50,
                             TargetValue = 50,
                             TriggerType = 2
                         },
@@ -101,8 +104,8 @@ namespace Rotinik.Migrations
                             Description = "Conclua sua primeira rotina.",
                             IconUrl = "📅",
                             Name = "Rotineiro",
-                            RewardCoins = 25,
-                            RewardPoints = 100,
+                            RewardCoins = 20,
+                            RewardPoints = 50,
                             TargetValue = 1,
                             TriggerType = 4
                         },
@@ -112,8 +115,8 @@ namespace Rotinik.Migrations
                             Description = "Conclua 3 rotinas.",
                             IconUrl = "💪",
                             Name = "Firme e Forte",
-                            RewardCoins = 100,
-                            RewardPoints = 300,
+                            RewardCoins = 20,
+                            RewardPoints = 50,
                             TargetValue = 3,
                             TriggerType = 4
                         },
@@ -123,8 +126,8 @@ namespace Rotinik.Migrations
                             Description = "Conclua 10 rotinas.",
                             IconUrl = "👑",
                             Name = "Mestre da Rotina",
-                            RewardCoins = 500,
-                            RewardPoints = 1000,
+                            RewardCoins = 20,
+                            RewardPoints = 50,
                             TargetValue = 10,
                             TriggerType = 4
                         },
@@ -134,8 +137,8 @@ namespace Rotinik.Migrations
                             Description = "Junte 100 Moedas.",
                             IconUrl = "💰",
                             Name = "Acumulador",
-                            RewardCoins = 0,
-                            RewardPoints = 150,
+                            RewardCoins = 20,
+                            RewardPoints = 50,
                             TargetValue = 100,
                             TriggerType = 1
                         },
@@ -145,8 +148,8 @@ namespace Rotinik.Migrations
                             Description = "Junte 500 Moedas.",
                             IconUrl = "💎",
                             Name = "Rico",
-                            RewardCoins = 0,
-                            RewardPoints = 500,
+                            RewardCoins = 20,
+                            RewardPoints = 50,
                             TargetValue = 500,
                             TriggerType = 1
                         },
@@ -156,8 +159,8 @@ namespace Rotinik.Migrations
                             Description = "Adquira a versão Premium.",
                             IconUrl = "⭐",
                             Name = "Apoiador Premium",
-                            RewardCoins = 1000,
-                            RewardPoints = 2000,
+                            RewardCoins = 20,
+                            RewardPoints = 50,
                             TargetValue = 1,
                             TriggerType = 5
                         },
@@ -167,7 +170,7 @@ namespace Rotinik.Migrations
                             Description = "Compre seu primeiro cosmético.",
                             IconUrl = "🛍️",
                             Name = "Consumidor",
-                            RewardCoins = 10,
+                            RewardCoins = 20,
                             RewardPoints = 50,
                             TargetValue = 1,
                             TriggerType = 6

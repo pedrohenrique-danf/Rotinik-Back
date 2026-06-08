@@ -211,7 +211,7 @@ public class UserService
         };
     }
 
-    public async Task UpgradeToPremiumAsync(int userId)
+    public async Task<List<Rotinik.Features.Medals.DTOs.MedalResponseDto>> UpgradeToPremiumAsync(int userId)
     {
         var user = await GetUserOrThrowAsync(userId);
         if (user.IsPremium)
@@ -219,7 +219,7 @@ public class UserService
 
         user.IsPremium = true;
         await _context.SaveChangesAsync();
-        await _medalService.EvaluateMedalsAsync(userId, Rotinik.Features.Medals.MedalTriggerType.PremiumPurchased);
+        return await _medalService.EvaluateMedalsAsync(userId, Rotinik.Features.Medals.MedalTriggerType.PremiumPurchased);
     }
 
     private async Task<int> CalculateUserRankAsync(int userPoints)

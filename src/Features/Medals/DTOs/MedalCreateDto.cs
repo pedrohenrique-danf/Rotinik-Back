@@ -7,4 +7,6 @@ public class MedalCreateDto
     public string IconUrl { get; set; } = string.Empty;
     public MedalTriggerType TriggerType { get; set; }
     public int TargetValue { get; set; }
+    public int RewardPoints { get; set; }
+    public int RewardCoins { get; set; }
 }

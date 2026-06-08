@@ -8,6 +8,7 @@ public static class MedalMappingExtensions
     {
         return query.Select(um => new UserMedalResponseDto
         {
+            MedalId = um.MedalId,
             AchievedAt = um.AchievedAt,
             IsEquipped = um.IsEquipped,
             Medal = new MedalResponseDto
@@ -17,7 +18,9 @@ public static class MedalMappingExtensions
                 Description = um.Medal.Description,
                 IconUrl = um.Medal.IconUrl,
                 TriggerType = um.Medal.TriggerType,
-                TargetValue = um.Medal.TargetValue
+                TargetValue = um.Medal.TargetValue,
+                RewardPoints = um.Medal.RewardPoints,
+                RewardCoins = um.Medal.RewardCoins
             }
         });
     }
@@ -31,7 +34,9 @@ public static class MedalMappingExtensions
             Description = m.Description,
             IconUrl = m.IconUrl,
             TriggerType = m.TriggerType,
-            TargetValue = m.TargetValue
+            TargetValue = m.TargetValue,
+            RewardPoints = m.RewardPoints,
+            RewardCoins = m.RewardCoins
         });
     }
 }

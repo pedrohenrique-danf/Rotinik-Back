@@ -16,6 +16,9 @@ var app = builder.Build();
 
 app.UseApplicationMiddlewares();
 
+// Removed debug code
+
 app.Run();
+// Trigger clean reload after kill
 
 public partial class Program { }

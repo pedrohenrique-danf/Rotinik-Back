@@ -267,6 +267,14 @@ public class TaskService
 
             await _context.SaveChangesAsync();
 
+            var uncompletedTasksExist = await _context.Tasks.AnyAsync(t => t.RoutineId == routineId && !t.IsCompleted);
+            if (!uncompletedTasksExist)
+            {
+                dailySummary.RoutinesCompleted += 1;
+                await _context.SaveChangesAsync();
+                newlyUnlockedMedals.AddRange(await _medalService.EvaluateMedalsAsync(currentUserId, MedalTriggerType.RoutinesCompleted));
+            }
+
             newlyUnlockedMedals.AddRange(await _medalService.EvaluateMedalsAsync(currentUserId, MedalTriggerType.TasksCompleted));
             newlyUnlockedMedals.AddRange(await _medalService.EvaluateMedalsAsync(currentUserId, MedalTriggerType.TotalPoints));
         }
@@ -287,6 +295,12 @@ public class TaskService
             {
                 dailySummary.PointsEarned = Math.Max(0, dailySummary.PointsEarned - task.XpReward);
                 dailySummary.CoinsEarned = Math.Max(0, dailySummary.CoinsEarned - task.CoinReward);
+                
+                var uncompletedTasksExistBefore = await _context.Tasks.AnyAsync(t => t.RoutineId == routineId && !t.IsCompleted && t.Id != taskId);
+                if (!uncompletedTasksExistBefore && dailySummary.RoutinesCompleted > 0)
+                {
+                    dailySummary.RoutinesCompleted -= 1;
+                }
             }
 
             _context.Set<WalletTransaction>().Add(new WalletTransaction
