@@ -52,6 +52,7 @@ public class UserService
         if (user.IsBanned)
             throw new UnauthorizedException("Sua conta foi suspensa ou banida pelo administrador.");
 
+        bool isRestored = false;
         // LÓGICA DE RESGATE DE CONTA
         if (user.DeletionScheduledFor.HasValue)
         {
@@ -60,9 +61,11 @@ public class UserService
             
             // O usuário logou antes dos 30 dias. Resgatamos a conta.
             user.DeletionScheduledFor = null;
+            isRestored = true;
         }
 
         var tokenPair = GenerateAndAssignTokens(user);
+        tokenPair.IsRestored = isRestored;
         await _context.SaveChangesAsync();
 
         return tokenPair;
