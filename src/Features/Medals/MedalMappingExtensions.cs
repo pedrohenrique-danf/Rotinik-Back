@@ -9,6 +9,7 @@ public static class MedalMappingExtensions
         return query.Select(um => new UserMedalResponseDto
         {
             AchievedAt = um.AchievedAt,
+            IsEquipped = um.IsEquipped,
             Medal = new MedalResponseDto
             {
                 Id = um.Medal.Id,

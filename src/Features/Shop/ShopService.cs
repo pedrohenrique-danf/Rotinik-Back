@@ -13,10 +13,12 @@ namespace Rotinik.Features.Shop;
 public class ShopService
 {
     private readonly AppDbContext _context;
+    private readonly Rotinik.Features.Medals.MedalService _medalService;
 
-    public ShopService(AppDbContext context)
+    public ShopService(AppDbContext context, Rotinik.Features.Medals.MedalService medalService)
     {
         _context = context;
+        _medalService = medalService;
     }
 
     public async Task<List<ShopItemResponseDto>> ListAllItemsAsync(int currentUserId)
@@ -165,6 +167,7 @@ public class ShopService
         // --- FIM DO BLOCO ATÔMICO ---
 
         await _context.SaveChangesAsync();
+        await _medalService.EvaluateMedalsAsync(userId, Rotinik.Features.Medals.MedalTriggerType.ShopItemPurchased);
     }
 
     public async Task EquipItemAsync(int shopItemId, int userId)

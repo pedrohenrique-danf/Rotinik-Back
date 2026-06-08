@@ -52,6 +52,25 @@ public class MedalController : ControllerBase
         return Ok(new { data = progress });
     }
 
+    [HttpPut("equip")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> EquipMedals([FromBody] MedalEquipDto dto)
+    {
+        var currentUserId = User.GetCurrentUserId();
+
+        try
+        {
+            await _medalService.EquipMedalsAsync(currentUserId, dto);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [Authorize(Policy = "AdminOnly")]
     [HttpPost("admin")]
     [ProducesResponseType(StatusCodes.Status201Created)]

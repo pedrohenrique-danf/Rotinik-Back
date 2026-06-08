@@ -15,17 +15,20 @@ public class UserService
     private readonly TokenService _tokenService;
     private readonly PasswordHasher _passwordHasher;
     private readonly IMemoryCache _cache;
+    private readonly Rotinik.Features.Medals.MedalService _medalService;
 
     public UserService(
         AppDbContext context, 
         TokenService tokenService, 
         PasswordHasher passwordHasher, 
-        IMemoryCache cache)
+        IMemoryCache cache,
+        Rotinik.Features.Medals.MedalService medalService)
     {
         _context = context;
         _tokenService = tokenService;
         _passwordHasher = passwordHasher;
         _cache = cache;
+        _medalService = medalService;
     }
 
     private async Task<User> GetUserOrThrowAsync(int userId)
@@ -202,6 +205,7 @@ public class UserService
 
         user.IsPremium = true;
         await _context.SaveChangesAsync();
+        await _medalService.EvaluateMedalsAsync(userId, Rotinik.Features.Medals.MedalTriggerType.PremiumPurchased);
     }
 
     private async Task<int> CalculateUserRankAsync(int userPoints)
@@ -258,6 +262,7 @@ public class UserService
 
         user.IsPremium = true;
         await _context.SaveChangesAsync();
+        await _medalService.EvaluateMedalsAsync(currentUserId, Rotinik.Features.Medals.MedalTriggerType.PremiumPurchased);
     }
 
     public async Task<List<UserRankDto>> GetTopRankedUsersAsync(int limit = 100)

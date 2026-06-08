@@ -80,12 +80,35 @@ public class MedalService
                 medalsWon.AddRange(candidateMedals.Where(m => currentStreak >= m.TargetValue));
                 break;
 
+            case MedalTriggerType.RoutinesCompleted:
+                var completedRoutinesCount = await _context.DailyUserSummaries
+                    .Where(d => d.UserId == userId)
+                    .SumAsync(d => d.RoutinesCompleted);
+                
+                medalsWon.AddRange(candidateMedals.Where(m => completedRoutinesCount >= m.TargetValue));
+                break;
+
             case MedalTriggerType.TotalPoints:
                 var user = await _context.Users.FindAsync(userId);
                 if (user != null)
                 {
                     medalsWon.AddRange(candidateMedals.Where(m => user.Points >= m.TargetValue));
                 }
+                break;
+
+            case MedalTriggerType.PremiumPurchased:
+                var userPremium = await _context.Users.FindAsync(userId);
+                if (userPremium != null && userPremium.IsPremium)
+                {
+                    medalsWon.AddRange(candidateMedals.Where(m => m.TargetValue == 1));
+                }
+                break;
+
+            case MedalTriggerType.ShopItemPurchased:
+                var purchasedItemsCount = await _context.Set<Rotinik.Features.Shop.UserShopItem>()
+                    .CountAsync(ui => ui.UserId == userId);
+                
+                medalsWon.AddRange(candidateMedals.Where(m => purchasedItemsCount >= m.TargetValue));
                 break;
         }
 
@@ -153,6 +176,36 @@ public class MedalService
         _context.Set<UserMedal>().RemoveRange(userMedals);
 
         _context.Medals.Remove(medal);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task EquipMedalsAsync(int userId, MedalEquipDto dto)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new Core.Exceptions.NotFoundException("User not found.");
+
+        int maxSlots = user.IsPremium ? 6 : 3;
+
+        if (dto.MedalIds.Count > maxSlots)
+            throw new ArgumentException($"You can only equip up to {maxSlots} medals.");
+
+        // Obter as medalhas atuais do usuário
+        var userMedals = await _context.Set<UserMedal>()
+            .Where(um => um.UserId == userId)
+            .ToListAsync();
+
+        // Validar se o usuário possui todas as medalhas enviadas
+        var invalidIds = dto.MedalIds.Except(userMedals.Select(um => um.MedalId)).ToList();
+        if (invalidIds.Any())
+            throw new ArgumentException("You do not own all the specified medals.");
+
+        // Atualizar IsEquipped
+        foreach (var um in userMedals)
+        {
+            um.IsEquipped = dto.MedalIds.Contains(um.MedalId);
+        }
+
         await _context.SaveChangesAsync();
     }
 

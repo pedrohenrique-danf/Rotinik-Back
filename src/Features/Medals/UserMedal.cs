@@ -11,4 +11,5 @@ public class UserMedal
     public Medal Medal { get; set; } = null!;
 
     public DateTime AchievedAt { get; set; } = DateTime.UtcNow;
+    public bool IsEquipped { get; set; }
 }

@@ -1,8 +1,13 @@
+namespace Rotinik.Features.Medals;
+
 public enum MedalTriggerType
 {
     TotalPoints = 1,
     TasksCompleted = 2,
-    RoutineStreak = 3
+    RoutineStreak = 3,
+    RoutinesCompleted = 4,
+    PremiumPurchased = 5,
+    ShopItemPurchased = 6
 }
 
 public class Medal
