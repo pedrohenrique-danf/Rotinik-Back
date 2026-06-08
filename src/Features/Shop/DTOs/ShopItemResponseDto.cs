@@ -11,4 +11,6 @@ public class ShopItemResponseDto
     public string Rarity { get; set; } = string.Empty;
     public double? Discount { get; set; }
     public bool IsNew { get; set; }
+    public bool IsOwned { get; set; }
+    public bool IsEquipped { get; set; }
 }

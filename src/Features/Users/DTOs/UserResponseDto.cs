@@ -13,4 +13,6 @@ public class UserResponseDto
     public int RankPosition { get; set; }
     public string Role { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
+    public bool IsBanned { get; set; }
+    public System.Collections.Generic.Dictionary<string, string> EquippedCosmetics { get; set; } = new();
 }

@@ -9,4 +9,5 @@ public class AdminUserUpdateDto
     public int Points { get; set; }
     public int Coins { get; set; }
     public bool IsPremium { get; set; }
+    public bool IsBanned { get; set; }
 }

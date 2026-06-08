@@ -27,7 +27,7 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
                 Name = "Gato Ninja",
                 Description = "Um gato ninja como mascote",
                 Icon = "🐱",
-                Category = "cosmetic",
+                Category = "avatar",
                 Price = 150,
                 Rarity = "rare",
                 IsNew = true
@@ -38,7 +38,7 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
                 Name = "Dragao Roxo",
                 Description = "Um dragao mistico roxo",
                 Icon = "🐉",
-                Category = "cosmetic",
+                Category = "avatar",
                 Price = 250,
                 Rarity = "epic",
                 IsNew = false
@@ -49,7 +49,7 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
                 Name = "Unicornio Brilhoso",
                 Description = "Um unicornio com brilho especial",
                 Icon = "🦄",
-                Category = "cosmetic",
+                Category = "avatar",
                 Price = 200,
                 Rarity = "epic",
                 IsNew = true
@@ -60,7 +60,7 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
                 Name = "Dobro de XP (7 dias)",
                 Description = "Ganhe o dobro de XP pelas proximas 7 dias",
                 Icon = "⚡",
-                Category = "boost",
+                Category = "navbar",
                 Price = 500,
                 Rarity = "rare",
                 IsNew = false
@@ -71,7 +71,7 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
                 Name = "Protetor de Streak",
                 Description = "Proteja seu streak por 1 falha",
                 Icon = "🛡️",
-                Category = "boost",
+                Category = "border",
                 Price = 300,
                 Rarity = "epic",
                 IsNew = false
@@ -82,7 +82,7 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
                 Name = "Tema Neon",
                 Description = "Tema com cores neon brilhantes",
                 Icon = "💎",
-                Category = "theme",
+                Category = "background",
                 Price = 200,
                 Rarity = "rare",
                 IsNew = true
@@ -93,7 +93,7 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
                 Name = "Tema Floresta",
                 Description = "Tema com cores verdes naturais",
                 Icon = "🌿",
-                Category = "theme",
+                Category = "background",
                 Price = 150,
                 Rarity = "common",
                 IsNew = false
@@ -104,7 +104,7 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
                 Name = "Placa: Speedrunner",
                 Description = "Mostra que voce e rapido",
                 Icon = "🏃",
-                Category = "badge",
+                Category = "level_icon",
                 Price = 100,
                 Rarity = "common",
                 IsNew = false
@@ -115,7 +115,7 @@ public class ShopItemConfiguration : IEntityTypeConfiguration<ShopItem>
                 Name = "Placa: Lenda",
                 Description = "A placa do verdadeiro lendario",
                 Icon = "👑",
-                Category = "badge",
+                Category = "level_icon",
                 Price = 1000,
                 Rarity = "legendary",
                 IsNew = false

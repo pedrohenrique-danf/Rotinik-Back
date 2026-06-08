@@ -13,6 +13,7 @@ public class User
     public int Coins { get; set; } = 0;
     public string Role { get; set; } = "user";
     public bool IsAdmin => Role == "admin";
+    public bool IsBanned { get; set; } = false;
 
     // O cronômetro de 30 dias para a exclusão física
     public DateTime? DeletionScheduledFor { get; set; }

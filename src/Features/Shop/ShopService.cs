@@ -24,6 +24,14 @@ public class ShopService
         var user = await _context.Users.FindAsync(currentUserId);
         bool isPremium = user?.IsPremium ?? false;
 
+        var userItems = await _context.UserShopItems
+            .AsNoTracking()
+            .Where(usi => usi.UserId == currentUserId)
+            .ToListAsync();
+
+        var ownedItemIds = userItems.Select(usi => usi.ShopItemId).ToHashSet();
+        var equippedItemIds = userItems.Where(usi => usi.IsEquipped).Select(usi => usi.ShopItemId).ToHashSet();
+
         var items = await _context.ShopItems
             .AsNoTracking()
             .OrderBy(x => x.Id)
@@ -40,7 +48,9 @@ public class ShopService
                 Price = x.Price,
                 Rarity = x.Rarity,
                 Discount = x.Discount,
-                IsNew = x.IsNew
+                IsNew = x.IsNew,
+                IsOwned = ownedItemIds.Contains(x.Id),
+                IsEquipped = equippedItemIds.Contains(x.Id)
             };
 
             if (isPremium)
@@ -157,6 +167,38 @@ public class ShopService
 
         // --- FIM DO BLOCO ATÔMICO ---
 
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task EquipItemAsync(int shopItemId, int userId)
+    {
+        var targetItem = await _context.ShopItems.FindAsync(shopItemId);
+        if (targetItem == null)
+            throw new NotFoundException("Item da loja não encontrado.");
+
+        var targetUserShopItem = await _context.UserShopItems
+            .FirstOrDefaultAsync(usi => usi.UserId == userId && usi.ShopItemId == shopItemId);
+
+        if (targetUserShopItem == null)
+            throw new BadRequestException("Você não possui este item.");
+
+        bool newEquipStatus = !targetUserShopItem.IsEquipped;
+
+        if (newEquipStatus)
+        {
+            // Desequipar outros itens da mesma categoria do usuário
+            var sameCategoryEquipped = await _context.UserShopItems
+                .Include(usi => usi.ShopItem)
+                .Where(usi => usi.UserId == userId && usi.IsEquipped && usi.ShopItem.Category == targetItem.Category)
+                .ToListAsync();
+
+            foreach (var other in sameCategoryEquipped)
+            {
+                other.IsEquipped = false;
+            }
+        }
+
+        targetUserShopItem.IsEquipped = newEquipStatus;
         await _context.SaveChangesAsync();
     }
 }
