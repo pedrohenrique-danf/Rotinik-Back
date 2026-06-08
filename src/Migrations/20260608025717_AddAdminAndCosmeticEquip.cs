@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,12 +10,7 @@ namespace Rotinik.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "IsEquipped",
-                table: "UserShopItems",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
+            // IsEquipped já foi adicionado pela migration AddSpaceShopItems (conflito de merge)
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsBanned",
@@ -98,9 +93,7 @@ namespace Rotinik.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "IsEquipped",
-                table: "UserShopItems");
+            // Drop da coluna IsEquipped já é tratado pela migration AddSpaceShopItems
 
             migrationBuilder.DropColumn(
                 name: "IsBanned",
