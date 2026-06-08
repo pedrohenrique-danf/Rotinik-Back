@@ -44,14 +44,24 @@ public class UserService
             .FirstOrDefaultAsync(u => u.Email == dto.Email || u.UserName == dto.Email);
 
         if (user == null || !_passwordHasher.VerifyPassword(dto.Password, user.Password))
-            throw new UnauthorizedException("Invalid email or password.");
+            throw new UnauthorizedException("Email ou senha inválidos.");
+
+        // LÓGICA DE RESGATE DE CONTA
+        if (user.DeletionScheduledFor.HasValue)
+        {
+            if (user.DeletionScheduledFor.Value <= DateTime.UtcNow)
+                throw new UnauthorizedException("Esta conta foi excluída permanentemente.");
+            
+            // O usuário logou antes dos 30 dias. Resgatamos a conta.
+            user.DeletionScheduledFor = null;
+        }
 
         var tokenPair = GenerateAndAssignTokens(user);
         await _context.SaveChangesAsync();
 
         return tokenPair;
     }
-
+    
     public async Task<TokenDto> RefreshTokenAsync(TokenDto dto)
     {
         var principal = _tokenService.GetPrincipalFromExpiredToken(dto.AccessToken);
@@ -123,14 +133,15 @@ public class UserService
 
     public async Task<UserProfileDto?> GetPublicProfileAsync(string username)
     {
+        // Ignora perfis que pediram exclusão
         var user = await _context.Users
             .Include(u => u.UserShopItems)
             .ThenInclude(usi => usi.ShopItem)
-            .SingleOrDefaultAsync(u => u.UserName == username);
-            
+            .SingleOrDefaultAsync(u => u.UserName == username && u.DeletionScheduledFor == null);
         if (user == null)
             throw new NotFoundException("User not found.");
 
+        // Resto do código permanece igual...
         var rankPosition = await CalculateUserRankAsync(user.Points);
 
         var equippedCosmetics = user.UserShopItems
@@ -229,7 +240,12 @@ public class UserService
 
         var user = await GetUserOrThrowAsync(id);
 
-        _context.Users.Remove(user);
+        // Soft Delete: Inicia a contagem de 30 dias
+        user.DeletionScheduledFor = DateTime.UtcNow.AddDays(30);
+        
+        // Derruba qualquer sessão ativa imediatamente
+        user.RefreshTokens.Clear();
+
         await _context.SaveChangesAsync();
     }
 
@@ -248,6 +264,7 @@ public class UserService
     {
         var topUsers = await _context.Users
             .AsNoTracking()
+            .Where(u => u.DeletionScheduledFor == null) // Filtro crucial
             .OrderByDescending(u => u.Points)
             .Take(limit)
             .Select(u => new
@@ -258,6 +275,7 @@ public class UserService
             })
             .ToListAsync();
 
+        // Resto do código permanece igual...
         return topUsers.Select((u, index) => new UserRankDto
         {
             RankPosition = index + 1,

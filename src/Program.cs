@@ -1,4 +1,5 @@
 using Rotinik.Core.Extensions;
+using Rotinik.Features.Users.Workers; // Importação limpa e direta
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,12 +9,12 @@ builder.Services
     .AddCorsConfiguration()
     .AddRateLimitingConfiguration()
     .AddApplicationServices()
-    .AddOpenApi();
+    .AddOpenApi()
+    .AddHostedService<AccountDeletionWorker>();
 
 var app = builder.Build();
 
 app.UseApplicationMiddlewares();
-
 
 app.Run();
 

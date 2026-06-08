@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rotinik.Core.Data;
@@ -11,9 +12,11 @@ using Rotinik.Core.Data;
 namespace Rotinik.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260608021204_AddUserSoftDelete")]
+    partial class AddUserSoftDelete
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -147,8 +150,8 @@ namespace Rotinik.Migrations
 
                     b.Property<string>("Icon")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("IsNew")
                         .ValueGeneratedOnAdd()
@@ -176,276 +179,100 @@ namespace Rotinik.Migrations
                         new
                         {
                             Id = 1,
-                            Category = "avatar",
-                            Description = "O inicio de uma grande jornada espacial.",
-                            Icon = "👨‍🚀",
+                            Category = "cosmetic",
+                            Description = "Um gato ninja como mascote",
+                            Icon = "🐱",
                             IsNew = true,
-                            Name = "Astronauta Novato",
-                            Price = 100,
-                            Rarity = "common"
+                            Name = "Gato Ninja",
+                            Price = 150,
+                            Rarity = "rare"
                         },
                         new
                         {
                             Id = 2,
-                            Category = "avatar",
-                            Description = "Um visitante de outra galaxia.",
-                            Icon = "👽",
+                            Category = "cosmetic",
+                            Description = "Um dragao mistico roxo",
+                            Icon = "🐉",
                             IsNew = false,
-                            Name = "Extraterrestre",
+                            Name = "Dragao Roxo",
+                            Price = 250,
+                            Rarity = "epic"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Category = "cosmetic",
+                            Description = "Um unicornio com brilho especial",
+                            Icon = "🦄",
+                            IsNew = true,
+                            Name = "Unicornio Brilhoso",
+                            Price = 200,
+                            Rarity = "epic"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Category = "boost",
+                            Description = "Ganhe o dobro de XP pelas proximas 7 dias",
+                            Icon = "⚡",
+                            IsNew = false,
+                            Name = "Dobro de XP (7 dias)",
+                            Price = 500,
+                            Rarity = "rare"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Category = "boost",
+                            Description = "Proteja seu streak por 1 falha",
+                            Icon = "🛡️",
+                            IsNew = false,
+                            Name = "Protetor de Streak",
+                            Price = 300,
+                            Rarity = "epic"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Category = "theme",
+                            Description = "Tema com cores neon brilhantes",
+                            Icon = "💎",
+                            IsNew = true,
+                            Name = "Tema Neon",
                             Price = 200,
                             Rarity = "rare"
                         },
                         new
                         {
-                            Id = 3,
-                            Category = "avatar",
-                            Description = "Tecnologia avancada de marte.",
-                            Icon = "🤖",
-                            IsNew = true,
-                            Name = "Robo Marciano",
-                            Price = 300,
-                            Rarity = "rare"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Category = "avatar",
-                            Description = "Lider da frota espacial.",
-                            Icon = "🧑‍✈️",
+                            Id = 7,
+                            Category = "theme",
+                            Description = "Tema com cores verdes naturais",
+                            Icon = "🌿",
                             IsNew = false,
-                            Name = "Comandante Estelar",
-                            Price = 500,
-                            Rarity = "epic"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Category = "avatar",
-                            Description = "O puro poder do universo.",
-                            Icon = "🌌",
-                            IsNew = false,
-                            Name = "Entidade Cosmica",
-                            Price = 1000,
-                            Rarity = "legendary"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Category = "border",
-                            Description = "Poeira espacial rodando seu perfil.",
-                            Icon = "2px dashed #9ca3af",
-                            IsNew = false,
-                            Name = "Borda de Asteroides",
+                            Name = "Tema Floresta",
                             Price = 150,
                             Rarity = "common"
                         },
                         new
                         {
-                            Id = 7,
-                            Category = "border",
-                            Description = "Um aro de luz de orbita baixa.",
-                            Icon = "3px solid #38bdf8",
-                            IsNew = true,
-                            Name = "Borda Neon Orbita",
-                            Price = 250,
-                            Rarity = "rare"
-                        },
-                        new
-                        {
                             Id = 8,
-                            Category = "border",
-                            Description = "A propulsao do foguete no seu perfil.",
-                            Icon = "3px solid #f97316",
+                            Category = "badge",
+                            Description = "Mostra que voce e rapido",
+                            Icon = "🏃",
                             IsNew = false,
-                            Name = "Borda Chama de Foguete",
-                            Price = 350,
-                            Rarity = "epic"
-                        },
-                        new
-                        {
-                            Id = 9,
-                            Category = "border",
-                            Description = "Uma aura cosmica misteriosa.",
-                            Icon = "4px double #8b5cf6",
-                            IsNew = true,
-                            Name = "Borda Materia Escura",
-                            Price = 600,
-                            Rarity = "epic"
-                        },
-                        new
-                        {
-                            Id = 10,
-                            Category = "border",
-                            Description = "O brilho intenso de uma estrela explodindo.",
-                            Icon = "4px solid #fbbf24",
-                            IsNew = false,
-                            Name = "Borda Supernova",
-                            Price = 1200,
-                            Rarity = "legendary"
-                        },
-                        new
-                        {
-                            Id = 11,
-                            Category = "level_icon",
-                            Description = "Orbita basica de comunicacao.",
-                            Icon = "📡",
-                            IsNew = false,
-                            Name = "Satelite",
+                            Name = "Placa: Speedrunner",
                             Price = 100,
                             Rarity = "common"
                         },
                         new
                         {
-                            Id = 12,
-                            Category = "level_icon",
-                            Description = "Exploracao do nosso vizinho.",
-                            Icon = "🌕",
+                            Id = 9,
+                            Category = "badge",
+                            Description = "A placa do verdadeiro lendario",
+                            Icon = "👑",
                             IsNew = false,
-                            Name = "Lua",
-                            Price = 200,
-                            Rarity = "common"
-                        },
-                        new
-                        {
-                            Id = 13,
-                            Category = "level_icon",
-                            Description = "Voando alem das nuvens.",
-                            Icon = "🚀",
-                            IsNew = true,
-                            Name = "Foguete Espacial",
-                            Price = 400,
-                            Rarity = "rare"
-                        },
-                        new
-                        {
-                            Id = 14,
-                            Category = "level_icon",
-                            Description = "Uma nave nao identificada.",
-                            Icon = "🛸",
-                            IsNew = false,
-                            Name = "Disco Voador",
-                            Price = 700,
-                            Rarity = "epic"
-                        },
-                        new
-                        {
-                            Id = 15,
-                            Category = "level_icon",
-                            Description = "Um rastro iluminado e magico.",
-                            Icon = "🌠",
-                            IsNew = true,
-                            Name = "Estrela Cadente",
-                            Price = 1500,
-                            Rarity = "legendary"
-                        },
-                        new
-                        {
-                            Id = 16,
-                            Category = "background",
-                            Description = "Cores cinzas do solo lunar.",
-                            Icon = "linear-gradient(135deg, #1f2937, #374151)",
-                            IsNew = false,
-                            Name = "Fundo Superficie Lunar",
-                            Price = 200,
-                            Rarity = "common"
-                        },
-                        new
-                        {
-                            Id = 17,
-                            Category = "background",
-                            Description = "Uma vista para as estrelas noturnas.",
-                            Icon = "linear-gradient(135deg, #0f172a, #1e1b4b)",
-                            IsNew = false,
-                            Name = "Fundo Ceu Estrelado",
-                            Price = 400,
-                            Rarity = "rare"
-                        },
-                        new
-                        {
-                            Id = 18,
-                            Category = "background",
-                            Description = "Uma mistura quente de gases estelares.",
-                            Icon = "linear-gradient(135deg, #7c2d12, #9a3412)",
-                            IsNew = true,
-                            Name = "Fundo Nebulosa Solar",
-                            Price = 600,
-                            Rarity = "epic"
-                        },
-                        new
-                        {
-                            Id = 19,
-                            Category = "background",
-                            Description = "Sugando toda a luz do universo.",
-                            Icon = "radial-gradient(circle, #000000 0%, #171717 100%)",
-                            IsNew = false,
-                            Name = "Fundo Buraco Negro",
-                            Price = 900,
-                            Rarity = "epic"
-                        },
-                        new
-                        {
-                            Id = 20,
-                            Category = "background",
-                            Description = "Cores cosmicas brilhantes.",
-                            Icon = "linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #0ea5e9 100%)",
-                            IsNew = true,
-                            Name = "Fundo Aurora Boreal Estelar",
-                            Price = 2000,
-                            Rarity = "legendary"
-                        },
-                        new
-                        {
-                            Id = 21,
-                            Category = "navbar",
-                            Description = "Metal basico de naves.",
-                            Icon = "#1e293b",
-                            IsNew = false,
-                            Name = "Nav Bar Padrao Espacial",
-                            Price = 150,
-                            Rarity = "common"
-                        },
-                        new
-                        {
-                            Id = 22,
-                            Category = "navbar",
-                            Description = "Brilho roxo espacial profundo.",
-                            Icon = "#4c1d95",
-                            IsNew = true,
-                            Name = "Nav Bar Ametista Galactica",
-                            Price = 300,
-                            Rarity = "rare"
-                        },
-                        new
-                        {
-                            Id = 23,
-                            Category = "navbar",
-                            Description = "Vermelho e quente como o planeta.",
-                            Icon = "#9f1239",
-                            IsNew = false,
-                            Name = "Nav Bar Marte",
-                            Price = 500,
-                            Rarity = "epic"
-                        },
-                        new
-                        {
-                            Id = 24,
-                            Category = "navbar",
-                            Description = "Um tom cosmico azul escuro.",
-                            Icon = "#0f172a",
-                            IsNew = false,
-                            Name = "Nav Bar Via Lactea",
-                            Price = 800,
-                            Rarity = "epic"
-                        },
-                        new
-                        {
-                            Id = 25,
-                            Category = "navbar",
-                            Description = "O brilho maximo da tecnologia.",
-                            Icon = "linear-gradient(90deg, #6d28d9, #2563eb, #db2777)",
-                            IsNew = true,
-                            Name = "Nav Bar Velocidade da Luz",
-                            Price = 2500,
+                            Name = "Placa: Lenda",
+                            Price = 1000,
                             Rarity = "legendary"
                         });
                 });
@@ -457,9 +284,6 @@ namespace Rotinik.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsEquipped")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("PurchasedAt")
                         .HasColumnType("timestamp with time zone");
@@ -804,7 +628,7 @@ namespace Rotinik.Migrations
                         .IsRequired();
 
                     b.HasOne("Rotinik.Features.Users.User", "User")
-                        .WithMany("UserShopItems")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -885,8 +709,6 @@ namespace Rotinik.Migrations
             modelBuilder.Entity("Rotinik.Features.Users.User", b =>
                 {
                     b.Navigation("RefreshTokens");
-
-                    b.Navigation("UserShopItems");
                 });
 #pragma warning restore 612, 618
         }
