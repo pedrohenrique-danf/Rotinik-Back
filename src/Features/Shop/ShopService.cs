@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -5,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Data;
 using Rotinik.Core.Exceptions;
 using Rotinik.Features.Shop.DTOs;
+using Rotinik.Features.Wallet; // Necessário para os Enums da Carteira
 
 namespace Rotinik.Features.Shop;
 
@@ -94,7 +96,7 @@ public class ShopService
         if (dto.Category != null) item.Category = dto.Category;
         if (dto.Price.HasValue) item.Price = dto.Price.Value;
         if (dto.Rarity != null) item.Rarity = dto.Rarity;
-        if (dto.Discount != null) item.Discount = dto.Discount; // wait, in C#, we use nullable, so if it's passed we update it.
+        if (dto.Discount != null) item.Discount = dto.Discount;
         if (dto.IsNew.HasValue) item.IsNew = dto.IsNew.Value;
 
         await _context.SaveChangesAsync();
@@ -107,6 +109,54 @@ public class ShopService
             throw new NotFoundException("Shop item not found.");
 
         _context.ShopItems.Remove(item);
+        await _context.SaveChangesAsync();
+    }
+
+    // O CÉREBRO DA COMPRA (REQUISITO FMG_5)
+    public async Task PurchaseItemAsync(int shopItemId, int userId)
+    {
+        // 1. Validar a existência do Item e do Usuário
+        var item = await _context.ShopItems.FindAsync(shopItemId);
+        if (item == null)
+            throw new NotFoundException("Item da loja não encontrado.");
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new NotFoundException("Usuário não encontrado.");
+
+        // 2. REGRA FMG_5: Blindagem de saldo
+        if (user.Coins < item.Price)
+            throw new InvalidOperationException("Saldo insuficiente para esta compra.");
+
+        // --- INÍCIO DO BLOCO ATÔMICO ---
+
+        // 3. Deduzir o saldo do usuário
+        user.Coins -= item.Price;
+
+        // 4. Registrar no Inventário (A entrega do item)
+        var userInventoryItem = new UserShopItem
+        {
+            UserId = userId,
+            ShopItemId = shopItemId,
+            PurchasedAt = DateTime.UtcNow
+        };
+        await _context.UserShopItems.AddAsync(userInventoryItem);
+
+        // 5. Auditar a transação na Carteira (Com os Enums corretos)
+        var transaction = new WalletTransaction
+        {
+            UserId = userId,
+            Amount = -item.Price,
+            Currency = CurrencyType.Coins,
+            Type = TransactionType.Spent,
+            Source = TransactionSource.Store,
+            Description = $"Compra na loja: {item.Name}",
+            CreatedAt = DateTime.UtcNow
+        };
+        await _context.WalletTransactions.AddAsync(transaction);
+
+        // --- FIM DO BLOCO ATÔMICO ---
+
         await _context.SaveChangesAsync();
     }
 }

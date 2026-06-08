@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rotinik.Core.Data;
 using Rotinik.Features.Statistics.DTOs;
-
+using Rotinik.Features.Wallet;
 namespace Rotinik.Features.Statistics;
 
 public class StatisticsService

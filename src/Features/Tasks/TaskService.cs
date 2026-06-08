@@ -5,6 +5,7 @@ using Rotinik.Features.Tasks.DTOs;
 using Rotinik.Features.Medals;
 using Rotinik.Features.Medals.DTOs;
 using Rotinik.Features.Statistics;
+using Rotinik.Features.Wallet;
 
 namespace Rotinik.Features.Tasks;
 

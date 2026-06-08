@@ -1,6 +1,6 @@
 using Rotinik.Features.Users;
 
-namespace Rotinik.Features.Statistics;
+namespace Rotinik.Features.Wallet;
 
 public enum TransactionType { Earned, Spent, Lost, Penalty }
 public enum CurrencyType { Points, Coins }
